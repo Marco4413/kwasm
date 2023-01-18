@@ -1,6 +1,6 @@
 package io.github.marco4413.kwasm.test
 
-import io.github.marco4413.kwasm.Module
+import io.github.marco4413.kwasm.bytecode.Module
 
 fun main(args: Array<String>) {
     if (args.isEmpty())

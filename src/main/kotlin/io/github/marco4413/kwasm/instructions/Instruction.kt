@@ -1,8 +1,8 @@
 package io.github.marco4413.kwasm.instructions
 
-import io.github.marco4413.kwasm.U8
+import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.WasmContext
-import io.github.marco4413.kwasm.WasmInputStream
+import io.github.marco4413.kwasm.bytecode.WasmInputStream
 import java.io.OutputStream
 
 const val BlockElse: U8 = 0x05u

@@ -1,8 +1,8 @@
 package io.github.marco4413.kwasm.instructions
 
-import io.github.marco4413.kwasm.U32
+import io.github.marco4413.kwasm.bytecode.U32
 import io.github.marco4413.kwasm.WasmContext
-import io.github.marco4413.kwasm.WasmInputStream
+import io.github.marco4413.kwasm.bytecode.WasmInputStream
 
 val LocalGetDescriptor = object : InstructionDescriptor("local.get", 0x20u) {
     override fun read(s: WasmInputStream): Instruction = LocalGet(s.readU32())

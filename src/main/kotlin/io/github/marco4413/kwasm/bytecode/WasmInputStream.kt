@@ -1,16 +1,9 @@
-package io.github.marco4413.kwasm
+package io.github.marco4413.kwasm.bytecode
 
 import java.io.BufferedInputStream
 import java.io.EOFException
 import java.io.InputStream
 import java.nio.charset.Charset
-
-typealias U8 = UByte
-typealias S32 = Int
-typealias U32 = UInt
-typealias S64 = Long
-typealias U64 = ULong
-typealias Name = String
 
 class WasmInputStream(stream: InputStream) : InputStream() {
     companion object {
