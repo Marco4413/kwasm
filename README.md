@@ -7,11 +7,11 @@ So things may not be written in the best way possible.**
 
 ## References
 
-https://webassembly.github.io/spec/core/index.html
-https://webassembly.github.io/spec/core/binary/index.html
+https://webassembly.github.io/spec/core/index.html  
+https://webassembly.github.io/spec/core/binary/index.html  
 https://en.wikipedia.org/wiki/LEB128
 
-https://github.com/WebAssembly/wabt
+https://github.com/WebAssembly/wabt  
 https://webassembly.github.io/wabt/demo/wat2wasm
 
 ## What can this do right now?
