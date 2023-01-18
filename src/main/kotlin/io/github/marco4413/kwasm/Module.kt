@@ -121,9 +121,9 @@ private fun readExportSection(s: WasmInputStream) : Array<Export> {
 private fun readExpression(s: WasmInputStream) : Expression {
     val expression = Expression()
     while (true) {
-        val instr = Instruction.fromStream(s)
-        if (instr.descriptor.opcode == BlockEnd) break
-        expression.add(instr)
+        val opcode = s.readU8()
+        if (opcode == BlockEnd) break
+        expression.add(Instruction.fromStream(s, opcode))
     }
     return expression
 }
