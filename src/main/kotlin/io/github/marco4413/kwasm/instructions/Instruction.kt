@@ -22,7 +22,7 @@ abstract class InstructionDescriptor(val name: String, val opcode: U8) {
 abstract class Instruction(val descriptor: InstructionDescriptor) {
     companion object {
         private val instr = createInstructionMap(
-            NopDescriptor
+            NopDescriptor, LocalGetDescriptor, I32AddDescriptor
         )
 
         fun fromStream(s: WasmInputStream, _opcode: U8? = null) : Instruction {
