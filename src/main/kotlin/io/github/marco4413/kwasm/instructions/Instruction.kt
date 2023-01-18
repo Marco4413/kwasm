@@ -22,7 +22,7 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
         fun fromStream(s: WasmInputStream) : Instruction {
             val opcode = s.readU8()
             val descriptor = instr[opcode]
-                ?: throw NullPointerException("No instruction with opcode $opcode found.")
+                ?: throw NullPointerException("No instruction with opcode 0x${opcode.toString(16)} found.")
             return descriptor.read(s)
         }
     }
