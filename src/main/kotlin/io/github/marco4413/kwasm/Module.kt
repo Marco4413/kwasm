@@ -141,7 +141,7 @@ private fun readCodeSection(s: WasmInputStream) : Array<Function> {
 
 class Module(val magic: U32, val version: U32,
              val types: TypeSection, val functions: FunctionSection,
-             val exports: ExportSection, code: CodeSection) {
+             val exports: ExportSection, val code: CodeSection) {
     companion object {
         fun fromStream(inStream: InputStream) : Module {
             val s = WasmInputStream(inStream)
