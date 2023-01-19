@@ -1,9 +1,9 @@
 package io.github.marco4413.kwasm.bytecode
 
 typealias U8 = UByte
-typealias S32 = Int
+typealias I32 = Int
 typealias U32 = UInt
-typealias S64 = Long
+typealias I64 = Long
 typealias U64 = ULong
 typealias Name = String
 

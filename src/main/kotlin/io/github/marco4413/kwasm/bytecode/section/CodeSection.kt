@@ -8,7 +8,6 @@ import io.github.marco4413.kwasm.instructions.BlockEnd
 import io.github.marco4413.kwasm.instructions.Instruction
 
 typealias Expression = ArrayList<Instruction>
-
 data class Function(val locals: Array2D<ValueType>, val expression: Expression)
 
 const val CodeSectionId: U8 = 10u

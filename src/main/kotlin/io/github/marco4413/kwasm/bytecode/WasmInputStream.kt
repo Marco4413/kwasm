@@ -10,20 +10,20 @@ class WasmInputStream(stream: InputStream) : InputStream() {
         val NAME_CHARSET: Charset = Charset.forName("UTF-8")
         const val MAX_U32_LEB128_BYTES = 5
         const val MAX_U64_LEB128_BYTES = 10
-        const val MAX_S32_LEB128_BYTES = 5
-        const val MAX_S64_LEB128_BYTES = 10
+        const val MAX_I32_LEB128_BYTES = 5
+        const val MAX_I64_LEB128_BYTES = 10
     }
 
     private val iStream = BufferedInputStream(stream)
 
-    fun readRawS32(): S32 = (
+    fun readRawI32(): I32 = (
             read() or
             (read() shl  8) or
             (read() shl 16) or
             (read() shl 24)
     )
 
-    fun readRawS64(): S64 = (
+    fun readRawI64(): I64 = (
             readAsLong() or
             (readAsLong() shl  8) or
             (readAsLong() shl 16) or
@@ -35,10 +35,10 @@ class WasmInputStream(stream: InputStream) : InputStream() {
     )
 
     fun readRawU32(): U32 =
-        readRawS32().toUInt()
+        readRawI32().toUInt()
 
     fun readRawU64(): U64 =
-        readRawS64().toULong()
+        readRawI64().toULong()
 
     private fun readULEB128(maxBytes: Int): ULong {
         var res: ULong = 0u
@@ -80,11 +80,11 @@ class WasmInputStream(stream: InputStream) : InputStream() {
         }
     }
 
-    fun readS32(): S32 =
-        readSLEB128(MAX_S32_LEB128_BYTES, 32).toInt()
+    fun readI32(): I32 =
+        readSLEB128(MAX_I32_LEB128_BYTES, 32).toInt()
 
-    fun readS64(): S64 =
-        readSLEB128(MAX_S64_LEB128_BYTES, 64).toLong()
+    fun readI64(): I64 =
+        readSLEB128(MAX_I64_LEB128_BYTES, 64).toLong()
 
     fun readName(): Name =
         readNBytes(readU32()).toString(NAME_CHARSET)
