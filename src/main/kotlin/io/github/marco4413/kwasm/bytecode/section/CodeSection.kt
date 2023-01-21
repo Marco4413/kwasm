@@ -1,20 +1,21 @@
 package io.github.marco4413.kwasm.bytecode.section
 
-import io.github.marco4413.kwasm.bytecode.Array2D
+import io.github.marco4413.kwasm.bytecode.U32
 import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.ValueType
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
 import io.github.marco4413.kwasm.instructions.BlockEnd
 import io.github.marco4413.kwasm.instructions.Instruction
 
-typealias Expression = ArrayList<Instruction>
-data class Function(val locals: Array2D<ValueType>, val expression: Expression)
+typealias Expression = List<Instruction>
+data class Locals(val count: U32, val type: ValueType)
+data class Function(val locals: List<Locals>, val expression: Expression)
 
 const val CodeSectionId: U8 = 10u
-typealias CodeSection = ArrayList<Function>
+typealias CodeSection = List<Function>
 
-private fun readExpression(s: WasmInputStream) : Expression {
-    val expression = Expression()
+fun readExpression(s: WasmInputStream) : Expression {
+    val expression = ArrayList<Instruction>()
     while (true) {
         val opcode = s.readU8()
         if (opcode == BlockEnd) break
@@ -23,13 +24,12 @@ private fun readExpression(s: WasmInputStream) : Expression {
     return expression
 }
 
-fun readCodeSection(s: WasmInputStream) : Array<Function> {
+fun readCodeSection(s: WasmInputStream) : CodeSection {
     s.readU32() // SIZE
     return s.readVector {
         s.readU32() // SIZE
-        // TODO: Figure out why this is a 2D Array
         Function(s.readVector {
-            s.readVector { ValueType.fromValue(s.readU8()) }
+            Locals(s.readU32(), ValueType.fromValue(s.readU8()))
         }, readExpression(s))
     }
 }
