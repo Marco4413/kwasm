@@ -83,17 +83,26 @@ class WasmInputStream(stream: InputStream) : InputStream() {
     fun readI32(): I32 =
         readSLEB128(MAX_I32_LEB128_BYTES, 32).toInt()
 
+    fun readI33(): I64 =
+        readSLEB128(MAX_I32_LEB128_BYTES, 33).toLong()
+
     fun readI64(): I64 =
         readSLEB128(MAX_I64_LEB128_BYTES, 64).toLong()
+
+    fun readF32(): F32 =
+        Float.fromBits(readRawI32())
+
+    fun readF64(): F64 =
+        Double.fromBits(readRawI64())
 
     fun readName(): Name =
         readNBytes(readU32()).toString(NAME_CHARSET)
 
-    inline fun <reified T> readVector(f: (s: WasmInputStream) -> T): Array<T> {
+    inline fun <reified T> readVector(f: (s: WasmInputStream) -> T): List<T> {
         val length = readU32().toInt()
         // println(length)
         if (length < 0) throw NegativeArraySizeException()
-        return Array(length) { f(this) }
+        return List(length) { f(this) }
     }
 
     override fun available(): Int =
