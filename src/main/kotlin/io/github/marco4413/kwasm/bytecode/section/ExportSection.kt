@@ -28,9 +28,9 @@ data class ExportDescription(val type: ExportType, val idx: U32)
 data class Export(val name: Name, val description: ExportDescription)
 
 const val ExportSectionId: U8 = 7u
-typealias ExportSection = ArrayList<Export>
+typealias ExportSection = List<Export>
 
-fun readExportSection(s: WasmInputStream) : Array<Export> {
+fun readExportSection(s: WasmInputStream) : ExportSection {
     s.readU32() // SIZE
     return s.readVector {
         Export(s.readName(), ExportDescription(

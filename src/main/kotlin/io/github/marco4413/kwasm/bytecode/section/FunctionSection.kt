@@ -5,9 +5,9 @@ import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
 
 const val FunctionSectionId: U8 = 3u
-typealias FunctionSection = ArrayList<TypeIdx>
+typealias FunctionSection = List<TypeIdx>
 
-fun readFunctionSection(s: WasmInputStream) : Array<TypeIdx> {
+fun readFunctionSection(s: WasmInputStream) : FunctionSection {
     s.readU32() // SIZE
     return s.readVector { s.readU32() }
 }

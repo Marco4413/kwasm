@@ -6,13 +6,13 @@ import io.github.marco4413.kwasm.bytecode.WasmInputStream
 
 
 const val FunctionTypeId: UByte = 96u
-data class FunctionType(val parameters: Array<ValueType>,
-                        val results: Array<ValueType>)
+data class FunctionType(val parameters: List<ValueType>,
+                        val results: List<ValueType>)
 
 const val TypeSectionId: U8 = 1u
-typealias TypeSection = ArrayList<FunctionType>
+typealias TypeSection = List<FunctionType>
 
-fun readTypeSection(s: WasmInputStream) : Array<FunctionType> {
+fun readTypeSection(s: WasmInputStream) : TypeSection {
     s.readU32() // SIZE
     return s.readVector {
         val id = s.readU8()
