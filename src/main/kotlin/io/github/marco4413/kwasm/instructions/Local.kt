@@ -1,7 +1,6 @@
 package io.github.marco4413.kwasm.instructions
 
 import io.github.marco4413.kwasm.bytecode.LocalIdx
-import io.github.marco4413.kwasm.bytecode.U32
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
 import io.github.marco4413.kwasm.runtime.Configuration
 import io.github.marco4413.kwasm.runtime.Stack

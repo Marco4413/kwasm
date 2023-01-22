@@ -1,6 +1,5 @@
 package io.github.marco4413.kwasm.runtime
 
-import io.github.marco4413.kwasm.bytecode.Expression
 import io.github.marco4413.kwasm.bytecode.U32
 
 enum class StackValueType {
@@ -75,32 +74,3 @@ class Stack {
         return fStack.removeLast()
     }
 }
-
-// open class StackItem(val type: StackValueType)
-// class StackItemValue(val value: Value) : StackItem(StackValueType.Value)
-// class StackItemFrame(val value: Frame) : StackItem(StackValueType.Frame)
-
-// class Stack : ArrayList<StackItem>() {
-//     val uSize: U32
-//         get() = size.toUInt()
-//
-//     fun push(item: StackItem): U32 { add(item); return uSize-1u }
-//     fun pop() : StackItem =
-//         removeAt(size-1)
-//
-//     inline fun <reified T : StackItem> popItem() : T {
-//         val item = pop()
-//         if (item is T) return item
-//         throw NullPointerException("Invalid Stack Item Type.")
-//     }
-//
-//     fun pushValue(value: Value) = push(StackItemValue(value))
-//     fun pushI32(value: I32) = pushValue(ValueI32(value))
-//     fun pushI64(value: I64) = pushValue(ValueI64(value))
-//     fun pushU32(value: U32) = pushValue(ValueU32(value))
-//     fun pushU64(value: U64) = pushValue(ValueU64(value))
-//     fun pushFrame(frame: Frame) = push(StackItemFrame(frame))
-//
-//     operator fun get(index: U32) : StackItem =
-//         this[index.toInt()]
-// }
