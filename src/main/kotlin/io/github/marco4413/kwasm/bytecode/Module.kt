@@ -10,9 +10,12 @@ class InvalidWasmFile :
 class UnsupportedWasmVersion(got: U32, expected: U32) :
     RuntimeException("Unsupported Wasm version $got, supported $expected.")
 
-data class Module(val magic: U32, val version: U32,
-             val types: TypeSection, val functions: FunctionSection,
-             val exports: ExportSection, val code: CodeSection) {
+const val StartSectionId: U8 = 8u
+
+class Module(val magic: U32, val version: U32,
+             val types: TypeSection, val imports: ImportSection,
+             val functions: FunctionSection, val exports: ExportSection,
+             val start: FunctionIdx?, val code: CodeSection) {
     companion object {
         const val WASM_MAGIC: U32 = 1836278016u
         const val WASM_VERSION: U32 = 1u
@@ -26,22 +29,26 @@ data class Module(val magic: U32, val version: U32,
             if (version != WASM_VERSION) throw UnsupportedWasmVersion(version, WASM_VERSION)
 
             val types = ArrayList<FunctionType>()
+            val imports = ArrayList<Import>()
             val functions = ArrayList<TypeIdx>()
             val exports = ArrayList<Export>()
+            var start: FunctionIdx? = null
             val code = ArrayList<Function>()
 
             while (s.available() > 0) {
                 when (val sId = s.readU8()) {
                     CustomSectionId -> readCustomSection(s, sId)
                     TypeSectionId -> types.addAll(readTypeSection(s))
+                    ImportSectionId -> imports.addAll(readImportSection(s))
                     FunctionSectionId -> functions.addAll(readFunctionSection(s))
                     ExportSectionId -> exports.addAll(readExportSection(s))
+                    StartSectionId -> { s.readU32(); /* SIZE */ start = s.readU32() }
                     CodeSectionId -> code.addAll(readCodeSection(s))
                     else -> TODO("Unimplemented Section $sId")
                 }
             }
 
-            return Module(magic, version, types, functions, exports, code)
+            return Module(magic, version, types, imports, functions, exports, start, code)
         }
     }
 }

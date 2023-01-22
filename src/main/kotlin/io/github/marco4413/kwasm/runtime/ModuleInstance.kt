@@ -5,24 +5,52 @@ import io.github.marco4413.kwasm.bytecode.Module
 import io.github.marco4413.kwasm.bytecode.Name
 import io.github.marco4413.kwasm.bytecode.section.ExportType
 import io.github.marco4413.kwasm.bytecode.section.FunctionType
+import io.github.marco4413.kwasm.bytecode.section.ImportDescriptionGlobal
+import io.github.marco4413.kwasm.bytecode.section.ImportType
 
 class ExportInstance(val name: Name,
                      val value: ExternalValue)
 
-class ModuleInstance(val store: Store, module: Module) {
+class ModuleInstance(val store: Store, module: Module, imports: List<ExternalValue>) {
     val types: List<FunctionType>
     val functionAddresses: List<Address>
+    val globalAddresses: List<Address>
     val exports: List<ExportInstance>
 
     init {
-        // TODO: Imports
-
         types = module.types
-        functionAddresses = module.functions.map {
-            store.allocateFunction(module, it, this)
+        functionAddresses = ArrayList()
+        globalAddresses = ArrayList()
+
+        // IMPORTS
+        if (imports.size != module.imports.size)
+            throw IllegalArgumentException("Not enough imports provided.")
+
+        for (i in imports.indices) {
+            val externValue = imports[i]
+            val importDesc = module.imports[i].description
+            when (externValue.type) {
+                ExternalType.FunctionAddress -> TODO()
+                ExternalType.TableAddress -> TODO()
+                ExternalType.MemoryAddress -> TODO()
+                ExternalType.GlobalAddress -> {
+                    if (importDesc.type != ImportType.Global)
+                        throw IllegalArgumentException("Import at $i is a Global, expected ${importDesc.type}")
+                    val expectedGlobalType = (importDesc as ImportDescriptionGlobal).value.type
+                    val global = store.getGlobal(externValue.address)
+                    if (global.value.type != expectedGlobalType)
+                        throw IllegalArgumentException("Import at $i is a Global of type ${global.value.type}, expected $expectedGlobalType")
+                    globalAddresses.add(externValue.address)
+                }
+            }
         }
 
-        // TODO: Tables, Memories, Globals
+        functionAddresses.addAll(module.functions.map {
+            store.allocateFunction(module, it, this)
+        })
+        // END IMPORTS
+
+        // TODO: Module-specific Tables, Memories, Globals
 
         exports = ArrayList(module.exports.map {
             when (it.description.type) {
@@ -32,7 +60,9 @@ class ModuleInstance(val store: Store, module: Module) {
             }
         })
 
-        // TODO: Elements, Data, Start
+        // TODO: Elements, Data
+
+        if (module.start != null) invoke(functionAddresses[module.start.toInt()])
     }
 
     fun invoke(export: ExportInstance, params: List<Value>) : List<Value> {
