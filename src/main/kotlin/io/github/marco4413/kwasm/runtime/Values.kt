@@ -2,15 +2,14 @@ package io.github.marco4413.kwasm.runtime
 
 import io.github.marco4413.kwasm.bytecode.*
 
-open class Value(val type: ValueType)
-class ValueI32(val value: I32) : Value(ValueType.I32) {
-    override fun toString(): String {
-        return value.toString()
-    }
+abstract class Value(val type: ValueType) {
+    abstract fun getValue() : Any
 }
-class ValueI64(val value: I64) : Value(ValueType.I64)
-class ValueU32(val value: U32) : Value(ValueType.U32)
-class ValueU64(val value: U64) : Value(ValueType.U64)
+
+class ValueI32(val value: I32) : Value(ValueType.I32) { override fun getValue(): Any = value }
+class ValueI64(val value: I64) : Value(ValueType.I64) { override fun getValue(): Any = value }
+class ValueU32(val value: U32) : Value(ValueType.U32) { override fun getValue(): Any = value }
+class ValueU64(val value: U64) : Value(ValueType.U64) { override fun getValue(): Any = value }
 
 fun getDefaultForValueType(type: ValueType) : Value {
     return when (type) {
