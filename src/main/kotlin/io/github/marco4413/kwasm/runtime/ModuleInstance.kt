@@ -61,7 +61,7 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
 
         exports = ArrayList(module.exports.map {
             when (it.description.type) {
-                ExportType.Type -> ExportInstance(it.name,
+                ExportType.Function -> ExportInstance(it.name,
                     ExternalValue(ExternalType.FunctionAddress, functions[it.description.idx.toInt()]))
                 else -> TODO("Only functions are supported as exports.")
             }

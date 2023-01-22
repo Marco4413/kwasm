@@ -6,7 +6,7 @@ import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
 
 enum class ExportType(val value: U8) {
-    Type(0u),
+    Function(0u),
     Table(1u),
     Memory(2u),
     Global(3u);
@@ -14,7 +14,7 @@ enum class ExportType(val value: U8) {
     companion object {
         fun fromValue(type: U8) : ExportType {
             return when (type) {
-                Type.value -> Type
+                Function.value -> Function
                 Table.value -> Table
                 Memory.value -> Memory
                 Global.value -> Global
