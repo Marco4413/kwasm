@@ -24,6 +24,7 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
             NopDescriptor, BlockDescriptor, BrIfDescriptor, BrTableDescriptor,
             ReturnDescriptor, CallDescriptor, SelectDescriptor,
             LocalGetDescriptor, LocalSetDescriptor, LocalTeeDescriptor,
+            GlobalSetDescriptor,
             I32ConstDescriptor, I32GTUDescriptor,
             I32AddDescriptor, I32SubDescriptor, I32AndDescriptor
         )
