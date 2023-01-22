@@ -24,8 +24,8 @@ enum class ExportType(val value: U8) {
     }
 }
 
-data class ExportDescription(val type: ExportType, val idx: U32)
-data class Export(val name: Name, val description: ExportDescription)
+class ExportDescription(val type: ExportType, val idx: U32)
+class Export(val name: Name, val description: ExportDescription)
 
 const val ExportSectionId: U8 = 7u
 typealias ExportSection = List<Export>

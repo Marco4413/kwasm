@@ -7,7 +7,7 @@ const val BlockElse: U8 = 0x05u
 const val BlockEnd: U8 = 0x0Bu
 
 typealias Expression = List<Instruction>
-data class Block(val body1: Expression, val body2: Expression)
+class Block(val body1: Expression, val body2: Expression)
 
 /** Doesn't parse Block Types */
 fun readBlock(s: WasmInputStream, allowElse: Boolean = true) : Block {

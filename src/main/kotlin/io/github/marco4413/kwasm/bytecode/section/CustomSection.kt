@@ -5,7 +5,7 @@ import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
 
 const val CustomSectionId: U8 = 0u
-data class CustomSection(val id: U8, val size: U32, val data: List<U8>)
+class CustomSection(val id: U8, val size: U32, val data: List<U8>)
 
 fun readCustomSection(s: WasmInputStream, sId: U8) : CustomSection {
     val data = s.readVector { s.readU8() }

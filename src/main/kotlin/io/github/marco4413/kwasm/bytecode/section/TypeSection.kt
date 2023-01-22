@@ -6,7 +6,7 @@ import io.github.marco4413.kwasm.bytecode.WasmInputStream
 
 
 const val FunctionTypeId: UByte = 96u
-data class FunctionType(val parameters: List<ValueType>,
+class FunctionType(val parameters: List<ValueType>,
                         val results: List<ValueType>)
 
 const val TypeSectionId: U8 = 1u
