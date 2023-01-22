@@ -1,18 +1,20 @@
 package io.github.marco4413.kwasm.runtime
 
 import io.github.marco4413.kwasm.bytecode.Address
-import io.github.marco4413.kwasm.bytecode.Module
 import io.github.marco4413.kwasm.bytecode.U32
-import io.github.marco4413.kwasm.bytecode.U64
 import io.github.marco4413.kwasm.bytecode.section.Function
 import io.github.marco4413.kwasm.bytecode.section.FunctionType
 import io.github.marco4413.kwasm.bytecode.section.GlobalType
 import io.github.marco4413.kwasm.bytecode.section.Mutability
 
-class FunctionInstance(val type: FunctionType,
-                       val module: ModuleInstance,
-                       val code: Function,
-                       val hostcode: U64)
+// enum class FunctionInstanceType { Module, Host }
+// class FunctionInstance(val instanceType: FunctionInstanceType, val type: FunctionType)
+
+typealias HostCode = (config: Configuration, stack: Stack) -> Unit
+
+open class FunctionInstance(val type: FunctionType)
+class ModuleFunctionInstance(type: FunctionType, val module: ModuleInstance, val code: Function) : FunctionInstance(type)
+class HostFunctionInstance(type: FunctionType, val code: HostCode) : FunctionInstance(type)
 
 class GlobalInstance(val type: GlobalType, initialValue: Value) {
     private var _value = initialValue
@@ -38,11 +40,22 @@ class Store {
      * data
      */
 
-    fun allocateFunction(module: Module, typeIdx: U32, moduleInstance: ModuleInstance) : Address {
-        val intTypeIdx = typeIdx.toInt()
-        val function = FunctionInstance(module.types[intTypeIdx], moduleInstance, module.code[intTypeIdx], 0u)
+    fun allocateFunction(typeIdx: U32, module: ModuleInstance, code: Function) : Address {
+        val function = ModuleFunctionInstance(module.types[typeIdx.toInt()], module, code)
         functions.add(function)
         return functions.size.toUInt() - 1u
+    }
+
+    fun allocateHostFunction(type: FunctionType, hostCode: HostCode) : Address {
+        val function = HostFunctionInstance(type, hostCode)
+        functions.add(function)
+        return functions.size.toUInt() - 1u
+    }
+
+    fun getFunction(addr: Address) : FunctionInstance {
+        if (addr.toInt() !in functions.indices)
+            throw NullPointerException("Invalid Function Address 0x${addr.toString(16)}")
+        return functions[addr.toInt()]
     }
 
     fun allocateGlobal(type: GlobalType, value: Value) : Address {

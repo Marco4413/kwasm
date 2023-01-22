@@ -11,6 +11,6 @@ val GlobalSetDescriptor = object : InstructionDescriptor("global.set", 0x24u) {
 
 class GlobalSet(val index: GlobalIdx) : Instruction(GlobalSetDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        config.store.setGlobal(config.thread.frame.module.globalAddresses[index.toInt()], stack.popValue())
+        config.store.setGlobal(config.thread.frame.module.globals[index.toInt()], stack.popValue())
     }
 }

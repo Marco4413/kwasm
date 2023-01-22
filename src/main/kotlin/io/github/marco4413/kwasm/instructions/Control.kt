@@ -76,7 +76,7 @@ val CallDescriptor = object : InstructionDescriptor("call", 0x10u) {
 
 class Call(val funcIdx: FunctionIdx) : Instruction(CallDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val addr = config.thread.frame.module.functionAddresses[funcIdx.toInt()]
+        val addr = config.thread.frame.module.functions[funcIdx.toInt()]
         config.thread.frame.module.invoke(addr, stack)
     }
 }

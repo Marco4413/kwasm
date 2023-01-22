@@ -37,6 +37,7 @@ enum class Mutability(val value: U8) {
 }
 
 open class ImportDescription(val type: ImportType)
+class ImportDescriptionFunction(val typeIdx: TypeIdx) : ImportDescription(ImportType.Function)
 
 class GlobalType(val type: ValueType, val mutability: Mutability)
 class ImportDescriptionGlobal(val value: GlobalType) : ImportDescription(ImportType.Global)
@@ -50,7 +51,7 @@ fun readImportSection(s: WasmInputStream) : ImportSection {
     s.readU32() // SIZE
     return s.readVector {
         Import(s.readName(), s.readName(), when (ImportType.fromValue(s.readU8())) {
-            ImportType.Function -> TODO()
+            ImportType.Function -> ImportDescriptionFunction(s.readU32())
             ImportType.Table -> TODO()
             ImportType.Memory -> TODO()
             ImportType.Global -> ImportDescriptionGlobal(
