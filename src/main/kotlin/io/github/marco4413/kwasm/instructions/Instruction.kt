@@ -1,8 +1,9 @@
 package io.github.marco4413.kwasm.instructions
 
 import io.github.marco4413.kwasm.bytecode.U8
-import io.github.marco4413.kwasm.WasmContext
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
+import io.github.marco4413.kwasm.runtime.Configuration
+import io.github.marco4413.kwasm.runtime.Stack
 import java.io.OutputStream
 
 const val BlockElse: U8 = 0x05u
@@ -22,8 +23,12 @@ abstract class InstructionDescriptor(val name: String, val opcode: U8) {
 abstract class Instruction(val descriptor: InstructionDescriptor) {
     companion object {
         private val instr = createInstructionMap(
-            NopDescriptor, ReturnDescriptor,
-            LocalGetDescriptor, I32ConstDescriptor, I32AddDescriptor
+            UnreachableDescriptor,
+            NopDescriptor, BlockDescriptor, BrIfDescriptor, BrTableDescriptor,
+            ReturnDescriptor, CallDescriptor, SelectDescriptor,
+            LocalGetDescriptor, LocalSetDescriptor, LocalTeeDescriptor,
+            I32ConstDescriptor, I32GTUDescriptor,
+            I32AddDescriptor, I32SubDescriptor, I32AndDescriptor
         )
 
         fun fromStream(s: WasmInputStream, _opcode: U8? = null) : Instruction {
@@ -35,7 +40,7 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
         }
     }
 
-    abstract fun execute(ctx: WasmContext)
+    abstract fun execute(config: Configuration, stack: Stack)
     open fun write(s: OutputStream) {
         s.write(descriptor.opcode.toInt())
     }
