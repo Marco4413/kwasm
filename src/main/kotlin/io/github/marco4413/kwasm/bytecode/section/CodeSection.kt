@@ -1,28 +1,15 @@
 package io.github.marco4413.kwasm.bytecode.section
 
-import io.github.marco4413.kwasm.bytecode.U32
-import io.github.marco4413.kwasm.bytecode.U8
-import io.github.marco4413.kwasm.bytecode.ValueType
-import io.github.marco4413.kwasm.bytecode.WasmInputStream
-import io.github.marco4413.kwasm.instructions.BlockEnd
-import io.github.marco4413.kwasm.instructions.Instruction
+import io.github.marco4413.kwasm.bytecode.*
 
-typealias Expression = List<Instruction>
 data class Locals(val count: U32, val type: ValueType)
-data class Function(val locals: List<Locals>, val expression: Expression)
+data class Function(val locals: List<Locals>, val body: Expression)
 
 const val CodeSectionId: U8 = 10u
 typealias CodeSection = List<Function>
 
-fun readExpression(s: WasmInputStream) : Expression {
-    val expression = ArrayList<Instruction>()
-    while (true) {
-        val opcode = s.readU8()
-        if (opcode == BlockEnd) break
-        expression.add(Instruction.fromStream(s, opcode))
-    }
-    return expression
-}
+fun readExpression(s: WasmInputStream) : Expression =
+    readBlock(s, false).body1
 
 fun readCodeSection(s: WasmInputStream) : CodeSection {
     s.readU32() // SIZE
