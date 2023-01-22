@@ -1,9 +1,10 @@
 package io.github.marco4413.kwasm.bytecode
 
-import io.github.marco4413.kwasm.instructions.BlockElse
-import io.github.marco4413.kwasm.instructions.BlockEnd
 import io.github.marco4413.kwasm.instructions.Instruction
 import java.lang.IllegalStateException
+
+const val BlockElse: U8 = 0x05u
+const val BlockEnd: U8 = 0x0Bu
 
 typealias Expression = List<Instruction>
 data class Block(val body1: Expression, val body2: Expression)

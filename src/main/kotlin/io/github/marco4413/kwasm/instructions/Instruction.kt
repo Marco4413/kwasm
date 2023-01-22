@@ -6,9 +6,6 @@ import io.github.marco4413.kwasm.runtime.Configuration
 import io.github.marco4413.kwasm.runtime.Stack
 import java.io.OutputStream
 
-const val BlockElse: U8 = 0x05u
-const val BlockEnd: U8 = 0x0Bu
-
 fun createInstructionMap(vararg descriptor: InstructionDescriptor) : MutableMap<U8, InstructionDescriptor> {
     val map = mutableMapOf<U8, InstructionDescriptor>()
     descriptor.forEach { map[it.opcode] = it }
