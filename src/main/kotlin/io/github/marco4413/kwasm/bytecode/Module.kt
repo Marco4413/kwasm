@@ -14,8 +14,8 @@ const val StartSectionId: U8 = 8u
 
 class Module(val magic: U32, val version: U32,
              val types: TypeSection, val imports: ImportSection,
-             val functions: FunctionSection, val exports: ExportSection,
-             val start: FunctionIdx?, val code: CodeSection) {
+             val functions: FunctionSection, val memories: MemorySection,
+             val exports: ExportSection, val start: FunctionIdx?, val code: CodeSection) {
     companion object {
         const val WASM_MAGIC: U32 = 1836278016u
         const val WASM_VERSION: U32 = 1u
@@ -31,6 +31,7 @@ class Module(val magic: U32, val version: U32,
             val types = ArrayList<FunctionType>()
             val imports = ArrayList<Import>()
             val functions = ArrayList<TypeIdx>()
+            val memories = ArrayList<Memory>()
             val exports = ArrayList<Export>()
             var start: FunctionIdx? = null
             val code = ArrayList<Function>()
@@ -41,6 +42,7 @@ class Module(val magic: U32, val version: U32,
                     TypeSectionId -> types.addAll(readTypeSection(s))
                     ImportSectionId -> imports.addAll(readImportSection(s))
                     FunctionSectionId -> functions.addAll(readFunctionSection(s))
+                    MemorySectionId -> memories.addAll(readMemorySection(s))
                     ExportSectionId -> exports.addAll(readExportSection(s))
                     StartSectionId -> { s.readU32(); /* SIZE */ start = s.readU32() }
                     CodeSectionId -> code.addAll(readCodeSection(s))
@@ -48,7 +50,7 @@ class Module(val magic: U32, val version: U32,
                 }
             }
 
-            return Module(magic, version, types, imports, functions, exports, start, code)
+            return Module(magic, version, types, imports, functions, memories, exports, start, code)
         }
     }
 }
