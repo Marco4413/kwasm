@@ -11,10 +11,9 @@ val SelectDescriptor = object : InstructionDescriptor("select", 0x1Bu) {
 
 class Select : Instruction(SelectDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val c = stack.popValueType<ValueI32>()
-        val val2 = stack.popValueType<ValueI32>()
-        val val1 = stack.popValueType<ValueI32>()
-        if (c.value != 0) stack.pushValue(val1)
-        else stack.pushValue(val2)
+        val c = stack.popValue() as ValueI32
+        val val2 = stack.popValue() as ValueI32
+        val val1 = stack.popValue() as ValueI32
+        stack.pushValue(if (c.value != 0) val1 else val2)
     }
 }

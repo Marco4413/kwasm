@@ -23,7 +23,7 @@ val I32EqZDescriptor = object : InstructionDescriptor("i32.eqz", 0x45u) {
 
 class I32EqZ : Instruction(I32EqZDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val c = stack.popValueType<ValueI32>()
+        val c = stack.popValue() as ValueI32
         stack.pushValue(ValueI32(if (c.value == 0) 1 else 0))
     }
 }
@@ -34,8 +34,8 @@ val I32GTUDescriptor = object : InstructionDescriptor("i32.gt_u", 0x4Bu) {
 
 class I32GTU : Instruction(I32GTUDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val b = stack.popValueType<ValueI32>()
-        val a = stack.popValueType<ValueI32>()
+        val b = stack.popValue() as ValueI32
+        val a = stack.popValue() as ValueI32
         stack.pushValue(ValueI32(
             if (a.value.toUInt() > b.value.toUInt()) 1 else 0
         ))
@@ -48,8 +48,8 @@ val I32AddDescriptor = object : InstructionDescriptor("i32.add", 0x6Au) {
 
 class I32Add : Instruction(I32AddDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val b = stack.popValueType<ValueI32>()
-        val a = stack.popValueType<ValueI32>()
+        val b = stack.popValue() as ValueI32
+        val a = stack.popValue() as ValueI32
         stack.pushValue(ValueI32(a.value + b.value))
     }
 }
@@ -60,8 +60,8 @@ val I32SubDescriptor = object : InstructionDescriptor("i32.sub", 0x6Bu) {
 
 class I32Sub : Instruction(I32SubDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val b = stack.popValueType<ValueI32>()
-        val a = stack.popValueType<ValueI32>()
+        val b = stack.popValue() as ValueI32
+        val a = stack.popValue() as ValueI32
         stack.pushValue(ValueI32(a.value - b.value))
     }
 }
@@ -72,8 +72,8 @@ val I32AndDescriptor = object : InstructionDescriptor("i32.and", 0x71u) {
 
 class I32And : Instruction(I32AndDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val b = stack.popValueType<ValueI32>()
-        val a = stack.popValueType<ValueI32>()
+        val b = stack.popValue() as ValueI32
+        val a = stack.popValue() as ValueI32
         stack.pushValue(ValueI32(a.value and b.value))
     }
 }
@@ -84,8 +84,8 @@ val I32SHLDescriptor = object : InstructionDescriptor("i32.shl", 0x74u) {
 
 class I32SHL : Instruction(I32SHLDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val b = stack.popValueType<ValueI32>()
-        val a = stack.popValueType<ValueI32>()
+        val b = stack.popValue() as ValueI32
+        val a = stack.popValue() as ValueI32
         stack.pushValue(ValueI32(a.value shl b.value))
     }
 }
@@ -96,8 +96,8 @@ val I32SHRSDescriptor = object : InstructionDescriptor("i32.shr_s", 0x75u) {
 
 class I32SHRS : Instruction(I32SHRSDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val b = stack.popValueType<ValueI32>()
-        val a = stack.popValueType<ValueI32>()
+        val b = stack.popValue() as ValueI32
+        val a = stack.popValue() as ValueI32
         stack.pushValue(ValueI32(a.value shr b.value))
     }
 }

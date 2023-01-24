@@ -17,7 +17,9 @@ class Stack {
     val lastFrame get() = fStack.lastOrNull()
     val lastLabel get() = lStack.lastOrNull()
 
+    val valueCount: U32 get() = vStack.size.toUInt()
     val labelCount: U32 get() = lStack.size.toUInt()
+    val frameCount: U32 get() = fStack.size.toUInt()
 
     private fun popType(type: StackValueType) {
         if (lastType != type) throw StackTypeException(type, lastType)
@@ -52,7 +54,7 @@ class Stack {
     //     }
     //     return values
     // }
-    //
+
     // fun getTopValueTypes() : List<ValueType> {
     //     val valueTypes = ArrayList<ValueType>()
     //     for (type in tStack.reversed()) {
@@ -62,11 +64,11 @@ class Stack {
     //     return valueTypes
     // }
 
-    inline fun <reified T : Value> popValueType() : T {
-        val value = popValue()
-        if (value is T) return value
-        throw StackTypeException(StackValueType.Value, null)
-    }
+    // inline fun <reified T : Value> popValueType() : T {
+    //     val value = popValue()
+    //     if (value is T) return value
+    //     throw StackTypeException(StackValueType.Value, null)
+    // }
 
     fun pushLabel(l: Label) {
         lStack.add(l)

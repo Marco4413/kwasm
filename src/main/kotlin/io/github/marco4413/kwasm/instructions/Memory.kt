@@ -17,7 +17,7 @@ val I32Load8UDescriptor = object : InstructionDescriptor("i32.load8_u", 0x2Du) {
 class I32Load8U(val memoryArg: MemoryArgument) : Instruction(I32Load8UDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val memory = config.store.getMemory(config.thread.frame.module.memories[0])
-        val baseAddr = stack.popValueType<ValueI32>()
+        val baseAddr = stack.popValue() as ValueI32
         val addr = (baseAddr.value + memoryArg.offset.toInt()).toUInt()
         if ((addr + 1u).toInt() > memory.data.size)
             throw Trap("Memory out of bounds.")
@@ -44,9 +44,9 @@ class MemoryInit(val dataIdx: DataIdx) : Instruction(MemoryRelatedDescriptor) {
         val memory = config.store.getMemory(config.thread.frame.module.memories[0])
         val data = config.store.getData(config.thread.frame.module.data[dataIdx.toInt()])
 
-        val length = stack.popValueType<ValueI32>()
-        val source = stack.popValueType<ValueI32>()
-        val target = stack.popValueType<ValueI32>()
+        val length = stack.popValue() as ValueI32
+        val source = stack.popValue() as ValueI32
+        val target = stack.popValue() as ValueI32
 
         if (source.value + length.value > data.data.size)
             throw Trap("Data out of bounds.")

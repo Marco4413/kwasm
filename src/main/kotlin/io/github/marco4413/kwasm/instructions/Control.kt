@@ -95,7 +95,7 @@ val BrIfDescriptor = object : InstructionDescriptor("br_if", 0x0Du) {
 
 class BrIf(val labelIdx: LabelIdx) : Instruction(BrIfDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val c = stack.popValueType<ValueI32>()
+        val c = stack.popValue() as ValueI32
         if (c.value != 0) br(labelIdx, config, stack)
     }
 }
@@ -106,7 +106,7 @@ val BrTableDescriptor = object : InstructionDescriptor("br_table", 0x0Eu) {
 
 class BrTable(val branches: List<LabelIdx>, val lastBranch: LabelIdx) : Instruction(BrTableDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val lI = stack.popValueType<ValueI32>()
+        val lI = stack.popValue() as ValueI32
         val labelIdx = if (lI.value < branches.size) branches[lI.value] else lastBranch
         br(labelIdx, config, stack)
     }
