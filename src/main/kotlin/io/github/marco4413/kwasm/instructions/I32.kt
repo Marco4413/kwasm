@@ -17,6 +17,17 @@ class I32Const(val value: I32) : Instruction(I32ConstDescriptor) {
     }
 }
 
+val I32EqZDescriptor = object : InstructionDescriptor("i32.eqz", 0x45u) {
+    override fun read(s: WasmInputStream): Instruction = I32EqZ()
+}
+
+class I32EqZ : Instruction(I32EqZDescriptor) {
+    override fun execute(config: Configuration, stack: Stack) {
+        val c = stack.popValueType<ValueI32>()
+        stack.pushValue(ValueI32(if (c.value == 0) 1 else 0))
+    }
+}
+
 val I32GTUDescriptor = object : InstructionDescriptor("i32.gt_u", 0x4Bu) {
     override fun read(s: WasmInputStream): Instruction = I32GTU()
 }
@@ -64,5 +75,29 @@ class I32And : Instruction(I32AndDescriptor) {
         val b = stack.popValueType<ValueI32>()
         val a = stack.popValueType<ValueI32>()
         stack.pushValue(ValueI32(a.value and b.value))
+    }
+}
+
+val I32SHLDescriptor = object : InstructionDescriptor("i32.shl", 0x74u) {
+    override fun read(s: WasmInputStream): Instruction = I32SHL()
+}
+
+class I32SHL : Instruction(I32SHLDescriptor) {
+    override fun execute(config: Configuration, stack: Stack) {
+        val b = stack.popValueType<ValueI32>()
+        val a = stack.popValueType<ValueI32>()
+        stack.pushValue(ValueI32(a.value shl b.value))
+    }
+}
+
+val I32SHRSDescriptor = object : InstructionDescriptor("i32.shr_s", 0x75u) {
+    override fun read(s: WasmInputStream): Instruction = I32SHRS()
+}
+
+class I32SHRS : Instruction(I32SHRSDescriptor) {
+    override fun execute(config: Configuration, stack: Stack) {
+        val b = stack.popValueType<ValueI32>()
+        val a = stack.popValueType<ValueI32>()
+        stack.pushValue(ValueI32(a.value shr b.value))
     }
 }
