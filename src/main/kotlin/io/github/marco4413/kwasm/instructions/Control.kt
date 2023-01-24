@@ -1,5 +1,6 @@
 package io.github.marco4413.kwasm.instructions
 
+import io.github.marco4413.kwasm.Trap
 import io.github.marco4413.kwasm.bytecode.*
 import io.github.marco4413.kwasm.runtime.*
 

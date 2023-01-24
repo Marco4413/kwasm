@@ -1,5 +1,6 @@
 package io.github.marco4413.kwasm.runtime
 
+import io.github.marco4413.kwasm.*
 import io.github.marco4413.kwasm.bytecode.Address
 import io.github.marco4413.kwasm.bytecode.Module
 import io.github.marco4413.kwasm.bytecode.Name
@@ -30,7 +31,7 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
 
         // IMPORTS
         if (imports.size != module.imports.size)
-            throw IllegalArgumentException("Not enough imports provided.")
+            throw WrongImportCount(module.imports.size.toUInt(), imports.size.toUInt())
 
         for (i in imports.indices) {
             val externValue = imports[i]
@@ -38,23 +39,23 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
             when (externValue.type) {
                 ExternalType.FunctionAddress -> {
                     if (importDesc.type != ImportType.Function)
-                        throw IllegalArgumentException("Import at $i is a Function, expected ${importDesc.type}")
+                        throw InvalidImportType(importDesc.type, ExternalType.FunctionAddress, i.toUInt())
                     val expectedType = module.types[
                             (importDesc as ImportDescriptionFunction).typeIdx.toInt()]
                     val function = store.getFunction(externValue.address)
                     if (!expectedType.signatureEquals(function.type))
-                        throw IllegalArgumentException("Import at $i is a Function with signature ${function.type}, expected $expectedType")
+                        throw InvalidImportFunctionType(expectedType, function.type, i.toUInt())
                     functions.add(externValue.address)
                 }
                 ExternalType.TableAddress -> TODO()
                 ExternalType.MemoryAddress -> TODO()
                 ExternalType.GlobalAddress -> {
                     if (importDesc.type != ImportType.Global)
-                        throw IllegalArgumentException("Import at $i is a Global, expected ${importDesc.type}")
+                        throw InvalidImportType(importDesc.type, ExternalType.GlobalAddress, i.toUInt())
                     val expectedType = (importDesc as ImportDescriptionGlobal).value.type
                     val global = store.getGlobal(externValue.address)
                     if (global.value.type != expectedType)
-                        throw IllegalArgumentException("Import at $i is a Global of type ${global.value.type}, expected $expectedType")
+                        throw InvalidImportGlobalType(expectedType, global.value.type, i.toUInt())
                     globals.add(externValue.address)
                 }
             }

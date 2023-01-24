@@ -1,11 +1,12 @@
 package io.github.marco4413.kwasm.instructions
 
+import io.github.marco4413.kwasm.Trap
+import io.github.marco4413.kwasm.UnknownInstructionException
 import io.github.marco4413.kwasm.bytecode.DataIdx
 import io.github.marco4413.kwasm.bytecode.U32
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
 import io.github.marco4413.kwasm.runtime.Configuration
 import io.github.marco4413.kwasm.runtime.Stack
-import io.github.marco4413.kwasm.runtime.Trap
 import io.github.marco4413.kwasm.runtime.ValueI32
 
 class MemoryArgument(val align: U32, val offset: U32)
@@ -34,7 +35,7 @@ val MemoryRelatedDescriptor = object : InstructionDescriptor("memory.init|copy|f
                 memInit
             }
             9u -> DataDrop(s.readU32())
-            else -> throw IllegalStateException()
+            else -> throw UnknownInstructionException(opcode)
         }
     }
 }

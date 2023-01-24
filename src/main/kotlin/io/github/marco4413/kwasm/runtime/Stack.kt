@@ -1,7 +1,7 @@
 package io.github.marco4413.kwasm.runtime
 
+import io.github.marco4413.kwasm.StackTypeException
 import io.github.marco4413.kwasm.bytecode.U32
-import io.github.marco4413.kwasm.bytecode.ValueType
 
 enum class StackValueType {
     Value, Label, Frame

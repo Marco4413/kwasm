@@ -1,5 +1,6 @@
 package io.github.marco4413.kwasm.runtime
 
+import io.github.marco4413.kwasm.*
 import io.github.marco4413.kwasm.bytecode.Address
 import io.github.marco4413.kwasm.bytecode.U32
 import io.github.marco4413.kwasm.bytecode.U8
@@ -20,12 +21,17 @@ class GlobalInstance(val type: GlobalType, initialValue: Value) {
     var value: Value
         get() = _value
         set(newValue) {
-            if (newValue.type != type.type)
-                throw IllegalArgumentException("Trying to set Global Value of type ${type.type} to ${newValue.type}")
+            if (type.mutability == Mutability.Constant)
+                throw ConstantGlobalAssignmentException()
+            else if (newValue.type != type.type)
+                throw InvalidGlobalTypeException(type.type, newValue.type)
             _value = newValue
         }
 
-    init { value = initialValue }
+    init {
+        if (_value.type != type.type)
+            throw InvalidGlobalTypeException(type.type, _value.type)
+    }
 }
 
 class DataInstance(val data: List<U8>)
@@ -54,7 +60,7 @@ class Store {
 
     fun getFunction(addr: Address) : FunctionInstance {
         if (addr.toInt() !in functions.indices)
-            throw NullPointerException("Invalid Function Address 0x${addr.toString(16)}")
+            throw InvalidStoreFunctionAddressException(addr)
         return functions[addr.toInt()]
     }
 
@@ -66,7 +72,7 @@ class Store {
 
     fun getMemory(addr: Address) : MemoryInstance {
         if (addr.toInt() !in memories.indices)
-            throw NullPointerException("Invalid Memory Address 0x${addr.toString(16)}")
+            throw InvalidStoreMemoryAddressException(addr)
         return memories[addr.toInt()]
     }
 
@@ -78,16 +84,12 @@ class Store {
 
     fun getGlobal(addr: Address) : GlobalInstance {
         if (addr.toInt() !in globals.indices)
-            throw NullPointerException("Invalid Global Address 0x${addr.toString(16)}")
+            throw InvalidStoreGlobalAddressException(addr)
         return globals[addr.toInt()]
     }
 
     fun setGlobal(addr: Address, value: Value) {
         val global = getGlobal(addr)
-        if (global.type.mutability == Mutability.Constant)
-            throw IllegalAccessException("Setting value of Constant Global 0x${addr.toString(16)}")
-        if (global.type.type != value.type)
-            throw IllegalArgumentException("Trying to set Global 0x${addr.toString(16)} of type ${global.type.type} to type ${value.type}")
         global.value = value
     }
 
@@ -99,13 +101,13 @@ class Store {
 
     fun getData(addr: Address) : DataInstance {
         if (addr.toInt() !in data.indices)
-            throw NullPointerException("Invalid Data Address 0x${addr.toString(16)}")
+            throw InvalidStoreDataAddressException(addr)
         return data[addr.toInt()]
     }
 
     fun dropData(addr: Address) {
         if (addr.toInt() !in data.indices)
-            throw NullPointerException("Invalid Data Address 0x${addr.toString(16)}")
+            throw InvalidStoreDataAddressException(addr)
         data[addr.toInt()] = DataInstance(listOf())
     }
 }

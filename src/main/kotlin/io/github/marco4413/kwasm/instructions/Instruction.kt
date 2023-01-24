@@ -1,5 +1,6 @@
 package io.github.marco4413.kwasm.instructions
 
+import io.github.marco4413.kwasm.UnknownInstructionException
 import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
 import io.github.marco4413.kwasm.runtime.Configuration
@@ -45,7 +46,7 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
             // TODO: Move this to Module.kt?
             val opcode = _opcode ?: s.readU8()
             val descriptor = instr[opcode]
-                ?: throw NullPointerException("No instruction with opcode 0x${opcode.toString(16)} found.")
+                ?: throw UnknownInstructionException(opcode)
             return descriptor.read(s)
         }
     }
