@@ -20,13 +20,25 @@ abstract class InstructionDescriptor(val name: String, val opcode: U8) {
 abstract class Instruction(val descriptor: InstructionDescriptor) {
     companion object {
         private val instr = createInstructionMap(
-            UnreachableDescriptor,
-            NopDescriptor, BlockDescriptor, BrIfDescriptor, BrTableDescriptor,
-            ReturnDescriptor, CallDescriptor, SelectDescriptor,
+            // Control
+            UnreachableDescriptor, NopDescriptor,
+            BlockDescriptor, LoopDescriptor,
+            BrIfDescriptor, BrTableDescriptor,
+            ReturnDescriptor, CallDescriptor,
+            // Parametric
+            SelectDescriptor,
+            // Local
             LocalGetDescriptor, LocalSetDescriptor, LocalTeeDescriptor,
+            // Global
             GlobalSetDescriptor,
-            I32ConstDescriptor, I32GTUDescriptor,
-            I32AddDescriptor, I32SubDescriptor, I32AndDescriptor
+            // I32
+            I32Load8UDescriptor,
+            I32ConstDescriptor,
+            I32EqZDescriptor, I32GTUDescriptor,
+            I32AddDescriptor, I32SubDescriptor,
+            I32AndDescriptor, I32SHLDescriptor, I32SHRSDescriptor,
+            // Memory
+            MemoryRelatedDescriptor
         )
 
         fun fromStream(s: WasmInputStream, _opcode: U8? = null) : Instruction {
