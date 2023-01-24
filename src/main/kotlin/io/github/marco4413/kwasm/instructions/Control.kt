@@ -1,10 +1,7 @@
 package io.github.marco4413.kwasm.instructions
 
 import io.github.marco4413.kwasm.bytecode.*
-import io.github.marco4413.kwasm.runtime.Configuration
-import io.github.marco4413.kwasm.runtime.Stack
-import io.github.marco4413.kwasm.runtime.Trap
-import io.github.marco4413.kwasm.runtime.ValueI32
+import io.github.marco4413.kwasm.runtime.*
 
 val UnreachableDescriptor = object : InstructionDescriptor("unreachable", 0x00u) {
     override fun read(s: WasmInputStream): Instruction = Unreachable()
@@ -28,12 +25,68 @@ val BlockDescriptor = object : InstructionDescriptor("block", 0x02u) {
     override fun read(s: WasmInputStream): Instruction {
         val blockType = s.readI33()
         val body = readBlock(s, false).body1
-        return InstrBlock(if (blockType < 0) null else ValueType.fromValue(blockType.toUByte()), body)
+        return InstrBlock(if (blockType < 0) null else blockType.toUInt(), body)
     }
 }
 
-class InstrBlock(val blockType: ValueType?, val body: Expression) : Instruction(BlockDescriptor) {
-    override fun execute(config: Configuration, stack: Stack) { stack.pushLabel(body) }
+class InstrBlock(val blockType: TypeIdx?, val body: Expression) : Instruction(BlockDescriptor) {
+    override fun execute(config: Configuration, stack: Stack) {
+        if (blockType == null) {
+            val label = Label(body)
+            stack.pushLabel(label)
+            config.thread.frame.module.executeLabel(label, config, stack)
+        } else {
+            val type = config.thread.frame.module.types[blockType.toInt()]
+            val values = stack.popTopValues()
+            assert(values.size == type.parameters.size)
+            val label = Label(body)
+            stack.pushLabel(label)
+            for (v in values.reversed())
+                stack.pushValue(v)
+            config.thread.frame.module.executeLabel(label, config, stack)
+        }
+    }
+}
+
+val LoopDescriptor = object : InstructionDescriptor("loop", 0x03u) {
+    override fun read(s: WasmInputStream): Instruction {
+        val blockType = s.readI33()
+        val body = readBlock(s, false).body1
+        return Loop(if (blockType < 0) null else blockType.toUInt(), body)
+    }
+}
+
+class Loop(val blockType: TypeIdx?, val body: Expression) : Instruction(LoopDescriptor) {
+    override fun execute(config: Configuration, stack: Stack) {
+        if (blockType == null) {
+            val label = LoopLabel(body)
+            stack.pushLabel(label)
+            config.thread.frame.module.executeLabel(label, config, stack)
+        } else {
+            val type = config.thread.frame.module.types[blockType.toInt()]
+            val values = stack.popTopValues()
+            assert(values.size == type.parameters.size)
+            val label = LoopLabel(body)
+            stack.pushLabel(label)
+            for (v in values.reversed())
+                stack.pushValue(v)
+            config.thread.frame.module.executeLabel(label, config, stack)
+        }
+    }
+}
+
+private fun br(l: LabelIdx, config: Configuration, stack: Stack) {
+    val label = stack.getNthLabelFromTop(l)
+    val values = stack.popTopValues()
+    for (i in 0u..l) {
+        while (stack.lastType == StackValueType.Value)
+            stack.popValue()
+        assert(stack.lastType == StackValueType.Label)
+        stack.popLabel().jumpToEnd()
+    }
+    stack.pushLabel(label)
+    for (v in values.reversed()) stack.pushValue(v)
+    label.branch()
 }
 
 val BrIfDescriptor = object : InstructionDescriptor("br_if", 0x0Du) {
@@ -43,8 +96,7 @@ val BrIfDescriptor = object : InstructionDescriptor("br_if", 0x0Du) {
 class BrIf(val labelIdx: LabelIdx) : Instruction(BrIfDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val c = stack.popValueType<ValueI32>()
-        if (c.value != 0)
-            stack.popLastLabels(labelIdx + 1u)
+        if (c.value != 0) br(labelIdx, config, stack)
     }
 }
 
@@ -56,7 +108,7 @@ class BrTable(val branches: List<LabelIdx>, val lastBranch: LabelIdx) : Instruct
     override fun execute(config: Configuration, stack: Stack) {
         val lI = stack.popValueType<ValueI32>()
         val labelIdx = if (lI.value < branches.size) branches[lI.value] else lastBranch
-        stack.popLastLabels(labelIdx + 1u)
+        br(labelIdx, config, stack)
     }
 }
 
@@ -66,7 +118,16 @@ val ReturnDescriptor = object : InstructionDescriptor("return", 0x0Fu) {
 
 class Return : Instruction(ReturnDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        assert(stack.popLastFrame() == config.thread.frame)
+        val values = stack.popTopValues()
+        while (stack.lastType != StackValueType.Frame) {
+            when (stack.lastType) {
+                StackValueType.Label -> stack.popLabel().jumpToEnd()
+                StackValueType.Value -> stack.popValue()
+                else -> throw IllegalStateException("Unreachable")
+            }
+        }
+        assert(stack.popFrame() == config.thread.frame)
+        for (v in values.reversed()) stack.pushValue(v)
     }
 }
 

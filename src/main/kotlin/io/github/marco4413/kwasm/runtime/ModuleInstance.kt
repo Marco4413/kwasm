@@ -4,7 +4,11 @@ import io.github.marco4413.kwasm.bytecode.Address
 import io.github.marco4413.kwasm.bytecode.Module
 import io.github.marco4413.kwasm.bytecode.Name
 import io.github.marco4413.kwasm.bytecode.section.*
+import io.github.marco4413.kwasm.instructions.DataDrop
+import io.github.marco4413.kwasm.instructions.I32Const
+import io.github.marco4413.kwasm.instructions.MemoryInit
 import java.lang.IllegalStateException
+import kotlin.collections.ArrayList
 
 class ExportInstance(val name: Name,
                      val value: ExternalValue)
@@ -12,13 +16,17 @@ class ExportInstance(val name: Name,
 class ModuleInstance(val store: Store, module: Module, imports: List<ExternalValue>) {
     val types: List<FunctionType>
     val functions: List<Address>
+    val memories: List<Address>
     val globals: List<Address>
+    val data: List<Address>
     val exports: List<ExportInstance>
 
     init {
         types = module.types
         functions = ArrayList()
+        memories = ArrayList()
         globals = ArrayList()
+        data = ArrayList()
 
         // IMPORTS
         if (imports.size != module.imports.size)
@@ -52,24 +60,70 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
             }
         }
 
+        // INSTANTIATION
         functions.addAll(module.functions.mapIndexed {
             i, it -> store.allocateFunction(it, this, module.code[i])
         })
-        // END IMPORTS
 
-        // TODO: Module-specific Tables, Memories, Globals
+        // TODO: Module-specific Tables
+
+        memories.addAll(module.memories.map {
+            store.allocateMemory(it.type)
+        })
+
+        // TODO: Globals, Elements
+
+        data.addAll(module.data.map {
+            store.allocateData(it.init)
+        })
 
         exports = ArrayList(module.exports.map {
             when (it.description.type) {
                 ExportType.Function -> ExportInstance(it.name,
                     ExternalValue(ExternalType.FunctionAddress, functions[it.description.idx.toInt()]))
-                else -> TODO("Only functions are supported as exports.")
+                ExportType.Memory -> ExportInstance(it.name,
+                    ExternalValue(ExternalType.MemoryAddress, memories[it.description.idx.toInt()]))
+                else -> TODO("Unsupported Export Type ${it.description.type}.")
             }
         })
 
-        // TODO: Elements, Data
+        // INITIALIZATION (Or at least the stuff that still needs to be initialized)
+        val config = Configuration(store, ComputationThread(Frame(mutableListOf(), this), listOf()))
+        val stack = Stack()
+        stack.pushFrame(config.thread.frame)
 
-        if (module.start != null) invoke(functions[module.start.toInt()])
+        for (i in module.data.indices) {
+            val data = module.data[i]
+            if (data.mode.type != DataModeType.Active) continue
+            data.mode as DataModeActive
+            assert(data.mode.memory == 0u)
+
+            val offsetLabel = Label(data.mode.offset)
+            stack.pushLabel(offsetLabel)
+            executeLabel(offsetLabel, config, stack)
+
+            val offset = stack.popValue()
+            val initLabel = Label(listOf(
+                I32Const(0),
+                I32Const(data.init.size),
+                MemoryInit(i.toUInt()),
+                DataDrop(i.toUInt())
+            ))
+
+            stack.pushLabel(initLabel)
+            stack.pushValue(offset)
+            executeLabel(initLabel, config, stack)
+        }
+
+        stack.popFrame()
+        if (module.start != null) invoke(functions[module.start.toInt()], stack)
+    }
+
+    fun executeLabel(label: Label, config: Configuration, stack: Stack) {
+        for (instr in label)
+            // println(instr.descriptor.name)
+            instr.execute(config, stack)
+        assert(stack.popLastLabel() == label)
     }
 
     fun invoke(export: ExportInstance, params: List<Value>) : List<Value> {
@@ -104,24 +158,7 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
         }
     }
 
-    private fun runLabel(label: Label, config: Configuration, stack: Stack) {
-        val depth = stack.labelCount
-        for (instr in label) {
-            println(instr.descriptor.name)
-            instr.execute(config, stack)
-
-            if (stack.lastFrame != config.thread.frame) {
-                break
-            } else if (stack.labelCount > depth) {
-                runLabel(stack.lastLabel!!, config, stack)
-                if (stack.lastFrame != config.thread.frame)
-                    break
-            } else if (stack.labelCount < depth) return
-        }
-        stack.popLastLabel()
-    }
-
-    fun invoke(addr: Address, stack: Stack = Stack()) {
+    fun invoke(addr: Address, stack: Stack) {
         val func = store.functions[addr.toInt()]
 
         val locals = MutableList(func.type.parameters.size) {
@@ -142,9 +179,10 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
 
                 val config = Configuration(store, ComputationThread(Frame(locals, this), func.code.body))
                 stack.pushFrame(config.thread.frame)
-                stack.pushLabel(config.thread.instructions)
 
-                runLabel(config.thread.instructions, config, stack)
+                val label = Label(config.thread.instructions)
+                stack.pushLabel(label)
+                executeLabel(label, config, stack)
                 if (stack.lastFrame == config.thread.frame)
                     stack.popLastFrame()
             }

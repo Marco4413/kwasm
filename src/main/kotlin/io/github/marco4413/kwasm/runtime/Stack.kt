@@ -1,6 +1,7 @@
 package io.github.marco4413.kwasm.runtime
 
 import io.github.marco4413.kwasm.bytecode.U32
+import io.github.marco4413.kwasm.bytecode.ValueType
 
 enum class StackValueType {
     Value, Label, Frame
@@ -33,6 +34,34 @@ class Stack {
         return vStack.removeLast()
     }
 
+    /** The first element in the returned List is the top-most value on the stack */
+    fun popTopValues() : List<Value> {
+        val values = ArrayList<Value>()
+        for (type in tStack.reversed()) {
+            if (type != StackValueType.Value) break
+            values.add(vStack[vStack.size - values.size - 1])
+        }
+        return values
+    }
+
+    // fun getTopValues() : List<Value> {
+    //     val values = ArrayList<Value>()
+    //     for (type in tStack.reversed()) {
+    //         if (type != StackValueType.Value) break
+    //         values.add(vStack[vStack.size - values.size - 1])
+    //     }
+    //     return values
+    // }
+    //
+    // fun getTopValueTypes() : List<ValueType> {
+    //     val valueTypes = ArrayList<ValueType>()
+    //     for (type in tStack.reversed()) {
+    //         if (type != StackValueType.Value) break
+    //         valueTypes.add(vStack[vStack.size - valueTypes.size - 1].type)
+    //     }
+    //     return valueTypes
+    // }
+
     inline fun <reified T : Value> popValueType() : T {
         val value = popValue()
         if (value is T) return value
@@ -49,14 +78,18 @@ class Stack {
         return lStack.removeLast()
     }
 
+    fun getNthLabelFromTop(n: U32) : Label {
+        return lStack[lStack.size - n.toInt() - 1]
+    }
+
     fun popLastLabel() : Label {
         val index = tStack.lastIndexOf(StackValueType.Label)
         tStack.removeAt(index)
         return lStack.removeLast()
     }
 
-    fun popLastLabels(n: U32) : List<Label> =
-        List(n.toInt()) { popLastLabel() }
+    // fun popLastLabels(n: U32) : List<Label> =
+    //     List(n.toInt()) { popLastLabel() }
 
     fun pushFrame(f: Frame) {
         fStack.add(f)

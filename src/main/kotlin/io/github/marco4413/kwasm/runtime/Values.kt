@@ -3,9 +3,10 @@ package io.github.marco4413.kwasm.runtime
 import io.github.marco4413.kwasm.bytecode.*
 
 abstract class Value(val type: ValueType) {
-    abstract fun getValue() : Any
+    abstract fun getValue() : Any?
 }
 
+// So U32/U64 aren't instances of Any. Interesting.
 class ValueI32(val value: I32) : Value(ValueType.I32) { override fun getValue(): Any = value }
 class ValueI64(val value: I64) : Value(ValueType.I64) { override fun getValue(): Any = value }
 class ValueU32(val value: U32) : Value(ValueType.U32) { override fun getValue(): Any = value }
