@@ -15,7 +15,8 @@ const val StartSectionId: U8 = 8u
 class Module(val magic: U32, val version: U32,
              val types: TypeSection, val imports: ImportSection,
              val functions: FunctionSection, val memories: MemorySection,
-             val exports: ExportSection, val start: FunctionIdx?, val code: CodeSection) {
+             val exports: ExportSection, val start: FunctionIdx?,
+             val code: CodeSection, val data: DataSection) {
     companion object {
         const val WASM_MAGIC: U32 = 1836278016u
         const val WASM_VERSION: U32 = 1u
@@ -35,6 +36,7 @@ class Module(val magic: U32, val version: U32,
             val exports = ArrayList<Export>()
             var start: FunctionIdx? = null
             val code = ArrayList<Function>()
+            val data = ArrayList<Data>()
 
             while (s.available() > 0) {
                 when (val sId = s.readU8()) {
@@ -46,11 +48,12 @@ class Module(val magic: U32, val version: U32,
                     ExportSectionId -> exports.addAll(readExportSection(s))
                     StartSectionId -> { s.readU32(); /* SIZE */ start = s.readU32() }
                     CodeSectionId -> code.addAll(readCodeSection(s))
+                    DataSectionId -> data.addAll(readDataSection(s))
                     else -> TODO("Unimplemented Section $sId")
                 }
             }
 
-            return Module(magic, version, types, imports, functions, memories, exports, start, code)
+            return Module(magic, version, types, imports, functions, memories, exports, start, code, data)
         }
     }
 }
