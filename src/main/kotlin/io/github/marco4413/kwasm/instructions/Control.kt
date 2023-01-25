@@ -90,6 +90,14 @@ private fun br(l: LabelIdx, config: Configuration, stack: Stack) {
     label.branch()
 }
 
+val BrDescriptor = object : InstructionDescriptor("br", 0x0Cu) {
+    override fun read(s: WasmInputStream): Instruction = Br(s.readU32())
+}
+
+class Br(val labelIdx: LabelIdx) : Instruction(BrDescriptor) {
+    override fun execute(config: Configuration, stack: Stack) = br(labelIdx, config, stack)
+}
+
 val BrIfDescriptor = object : InstructionDescriptor("br_if", 0x0Du) {
     override fun read(s: WasmInputStream): Instruction = BrIf(s.readU32())
 }

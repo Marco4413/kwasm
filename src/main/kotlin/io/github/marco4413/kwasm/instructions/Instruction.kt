@@ -24,7 +24,7 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
             // Control
             UnreachableDescriptor, NopDescriptor,
             BlockDescriptor, LoopDescriptor,
-            BrIfDescriptor, BrTableDescriptor,
+            BrDescriptor, BrIfDescriptor, BrTableDescriptor,
             ReturnDescriptor, CallDescriptor,
             // Parametric
             SelectDescriptor,
