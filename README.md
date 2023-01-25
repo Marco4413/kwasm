@@ -19,6 +19,6 @@ https://webassembly.github.io/wabt/demo/wasm2wat
 ## What can this do right now?
 
 This project is now able to parse basic Wasm and run it.
-Memories, Tables and Globals are not yet supported (as well as other 'complex stuff').
+Elements, Tables and 'partially' Globals are not yet supported.
 
 I plan on adding support for Wat parsing (or a custom language) in the future.
