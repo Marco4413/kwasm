@@ -124,7 +124,9 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
         for (instr in label)
             // println(instr.descriptor.name)
             instr.execute(config, stack)
-        assert(stack.popLastLabel() == label)
+        // If this is not true then the label has probably been popped by an Instruction
+        if (stack.lastLabel == label)
+            stack.popLastLabel()
     }
 
     fun invoke(export: ExportInstance, params: List<Value>) : List<Value> {
