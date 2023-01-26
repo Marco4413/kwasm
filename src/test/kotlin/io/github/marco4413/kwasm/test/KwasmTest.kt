@@ -6,6 +6,7 @@ import io.github.marco4413.kwasm.bytecode.section.FunctionType
 import io.github.marco4413.kwasm.runtime.*
 import org.junit.jupiter.api.Test
 import java.io.InputStream
+import java.lang.NullPointerException
 import java.lang.StringBuilder
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -31,11 +32,12 @@ class KwasmTest {
             buffer.append(chValue.value.toChar())
         }
 
-        val instance = ModuleInstance(store, module, listOf(
-            ExternalValue(ExternalType.FunctionAddress, cPrint)
+        val instance = ModuleInstance(store, module, mapOf(
+            "env/c_print" to ExternalValue(ExternalType.FunctionAddress, cPrint)
         ))
 
-        val print = instance.exports[1] // 0 is Memory
+        val print = instance.exports["print"]
+            ?: throw NullPointerException()
         instance.invoke(print, listOf(ValueI32(0)))
 
         assertEquals("Hello World!", buffer.toString())
