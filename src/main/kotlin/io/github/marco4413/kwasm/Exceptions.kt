@@ -1,9 +1,6 @@
 package io.github.marco4413.kwasm
 
-import io.github.marco4413.kwasm.bytecode.Address
-import io.github.marco4413.kwasm.bytecode.U32
-import io.github.marco4413.kwasm.bytecode.U8
-import io.github.marco4413.kwasm.bytecode.ValueType
+import io.github.marco4413.kwasm.bytecode.*
 import io.github.marco4413.kwasm.bytecode.section.FunctionType
 import io.github.marco4413.kwasm.bytecode.section.ImportType
 import io.github.marco4413.kwasm.runtime.ExternalType
@@ -37,18 +34,21 @@ class ConstantGlobalAssignmentException :
 class InvalidGlobalTypeException(expected: ValueType, got: ValueType?) :
         WasmRuntimeException("Assigning an $got value to an $expected Global")
 
-class WrongImportCount(expected: U32, got: U32) :
-        WasmRuntimeException("Expected $expected imports, got $got")
-class InvalidImportType(expected: ImportType, got: ExternalType, importIndex: U32) :
-        WasmRuntimeException("Import at $importIndex is a $got, expected $expected")
-class InvalidImportFunctionType(expected: FunctionType, got: FunctionType, importIndex: U32) :
-        WasmRuntimeException("Import at $importIndex has signature $got, expected $expected")
-class InvalidImportGlobalType(expected: ValueType, got: ValueType, importIndex: U32) :
-        WasmRuntimeException("Import at $importIndex has type $got, expected $expected")
+class NotEnoughImportsException(expected: U32, got: U32) :
+        WasmRuntimeException("Expected at least $expected imports, got $got")
+class UndefinedImportException(name: String, type: ImportType) :
+        WasmRuntimeException("Import $name of type $type is not defined")
 
-class InvalidExternalType(expected: ExternalType, got: ExternalType?) :
+class InvalidImportTypeException(expected: ImportType, got: ExternalType, importName: Name) :
+        WasmRuntimeException("Import $importName is a $got, expected $expected")
+class InvalidImportFunctionTypeException(expected: FunctionType, got: FunctionType, importName: Name) :
+        WasmRuntimeException("Import $importName has signature $got, expected $expected")
+class InvalidImportGlobalTypeException(expected: ValueType, got: ValueType, importName: Name) :
+        WasmRuntimeException("Import $importName has type $got, expected $expected")
+
+class InvalidExternalTypeException(expected: ExternalType, got: ExternalType?) :
         WasmRuntimeException("Expected export of type $expected, got $got")
-class WrongArgumentCount(fAddr: Address, expected: U32, got: U32) :
+class IllegalArgumentCountException(fAddr: Address, expected: U32, got: U32) :
         WasmRuntimeException("Function 0x${fAddr.toString(16)} requires $expected arguments, got $got")
 class InvalidArgumentTypeException(fAddr: Address, argIndex: U32, expected: ValueType, got: ValueType?) :
         WasmRuntimeException("Argument of 0x${fAddr.toString(16)} at $argIndex has the wrong Value Type, expected $expected, got $got")

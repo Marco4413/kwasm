@@ -14,13 +14,13 @@ import kotlin.collections.ArrayList
 class ExportInstance(val name: Name,
                      val value: ExternalValue)
 
-class ModuleInstance(val store: Store, module: Module, imports: List<ExternalValue>) {
+class ModuleInstance(val store: Store, module: Module, imports: Map<Name, ExternalValue>) {
     val types: List<FunctionType>
     val functions: List<Address>
     val memories: List<Address>
     val globals: List<Address>
     val data: List<Address>
-    val exports: List<ExportInstance>
+    val exports: Map<Name, ExportInstance>
 
     init {
         types = module.types
@@ -28,34 +28,37 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
         memories = ArrayList()
         globals = ArrayList()
         data = ArrayList()
+        exports = HashMap()
 
         // IMPORTS
-        if (imports.size != module.imports.size)
-            throw WrongImportCount(module.imports.size.toUInt(), imports.size.toUInt())
+        if (imports.size < module.imports.size)
+            throw NotEnoughImportsException(module.imports.size.toUInt(), imports.size.toUInt())
 
-        for (i in imports.indices) {
-            val externValue = imports[i]
-            val importDesc = module.imports[i].description
+        for (import in module.imports) {
+            val importDesc = import.description
+            val importName = "${import.module}/${import.name}"
+            val externValue = imports[importName] ?:
+                throw UndefinedImportException(importName, importDesc.type)
             when (externValue.type) {
                 ExternalType.FunctionAddress -> {
                     if (importDesc.type != ImportType.Function)
-                        throw InvalidImportType(importDesc.type, ExternalType.FunctionAddress, i.toUInt())
+                        throw InvalidImportTypeException(importDesc.type, ExternalType.FunctionAddress, importName)
                     val expectedType = module.types[
                             (importDesc as ImportDescriptionFunction).typeIdx.toInt()]
                     val function = store.getFunction(externValue.address)
                     if (!expectedType.signatureEquals(function.type))
-                        throw InvalidImportFunctionType(expectedType, function.type, i.toUInt())
+                        throw InvalidImportFunctionTypeException(expectedType, function.type, importName)
                     functions.add(externValue.address)
                 }
                 ExternalType.TableAddress -> TODO()
                 ExternalType.MemoryAddress -> TODO()
                 ExternalType.GlobalAddress -> {
                     if (importDesc.type != ImportType.Global)
-                        throw InvalidImportType(importDesc.type, ExternalType.GlobalAddress, i.toUInt())
+                        throw InvalidImportTypeException(importDesc.type, ExternalType.GlobalAddress, importName)
                     val expectedType = (importDesc as ImportDescriptionGlobal).value.type
                     val global = store.getGlobal(externValue.address)
                     if (global.value.type != expectedType)
-                        throw InvalidImportGlobalType(expectedType, global.value.type, i.toUInt())
+                        throw InvalidImportGlobalTypeException(expectedType, global.value.type, importName)
                     globals.add(externValue.address)
                 }
             }
@@ -78,15 +81,16 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
             store.allocateData(it.init)
         })
 
-        exports = ArrayList(module.exports.map {
-            when (it.description.type) {
-                ExportType.Function -> ExportInstance(it.name,
-                    ExternalValue(ExternalType.FunctionAddress, functions[it.description.idx.toInt()]))
-                ExportType.Memory -> ExportInstance(it.name,
-                    ExternalValue(ExternalType.MemoryAddress, memories[it.description.idx.toInt()]))
-                else -> TODO("Unsupported Export Type ${it.description.type}.")
+        for (export in module.exports) {
+            assert(exports[export.name] == null)
+            exports[export.name] = when (export.description.type) {
+                ExportType.Function -> ExportInstance(export.name,
+                    ExternalValue(ExternalType.FunctionAddress, functions[export.description.idx.toInt()]))
+                ExportType.Memory -> ExportInstance(export.name,
+                    ExternalValue(ExternalType.MemoryAddress, memories[export.description.idx.toInt()]))
+                else -> TODO("Unsupported Export Type ${export.description.type}.")
             }
-        })
+        }
 
         // INITIALIZATION (Or at least the stuff that still needs to be initialized)
         val config = Configuration(store, ComputationThread(Frame(mutableListOf(), this), listOf()))
@@ -131,7 +135,7 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
 
     fun invoke(export: ExportInstance, params: List<Value>) : List<Value> {
         if (export.value.type != ExternalType.FunctionAddress)
-            throw InvalidExternalType(ExternalType.FunctionAddress, export.value.type)
+            throw InvalidExternalTypeException(ExternalType.FunctionAddress, export.value.type)
         println("Invoking ${export.name}")
         return invoke(export.value.address, params)
     }
@@ -139,7 +143,7 @@ class ModuleInstance(val store: Store, module: Module, imports: List<ExternalVal
     fun invoke(addr: Address, params: List<Value>) : List<Value> {
         val f = store.functions[addr.toInt()]
         if (params.size != f.type.parameters.size)
-            throw WrongArgumentCount(addr, f.type.parameters.size.toUInt(), params.size.toUInt())
+            throw IllegalArgumentCountException(addr, f.type.parameters.size.toUInt(), params.size.toUInt())
 
         for (i in params.indices) {
             val expectedType = f.type.parameters[i]
