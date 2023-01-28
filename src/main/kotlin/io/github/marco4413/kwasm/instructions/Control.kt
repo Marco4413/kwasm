@@ -24,55 +24,43 @@ class Nop : Instruction(NopDescriptor) {
 
 val BlockDescriptor = object : InstructionDescriptor("block", 0x02u) {
     override fun read(s: WasmInputStream): Instruction {
-        val blockType = s.readI33()
+        val blockType = readBlockType(s)
         val body = readBlock(s, false).body1
-        return InstrBlock(if (blockType < 0) null else blockType.toUInt(), body)
+        return InstrBlock(blockType, body)
     }
 }
 
-class InstrBlock(val blockType: TypeIdx?, val body: Expression) : Instruction(BlockDescriptor) {
+class InstrBlock(val blockType: BlockType, val body: Expression) : Instruction(BlockDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        if (blockType == null) {
-            val label = Label(body)
-            stack.pushLabel(label)
-            config.thread.frame.module.executeLabel(label, config, stack)
-        } else {
-            val type = config.thread.frame.module.types[blockType.toInt()]
-            val values = stack.popTopValues()
-            assert(values.size == type.parameters.size)
-            val label = Label(body)
-            stack.pushLabel(label)
-            for (v in values.reversed())
-                stack.pushValue(v)
-            config.thread.frame.module.executeLabel(label, config, stack)
-        }
+        val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
+        val values = stack.popTopValues()
+        assert(values.size == type.parameters.size)
+        val label = Label(body)
+        stack.pushLabel(label)
+        for (v in values.reversed())
+            stack.pushValue(v)
+        config.thread.frame.module.executeLabel(label, config, stack)
     }
 }
 
 val LoopDescriptor = object : InstructionDescriptor("loop", 0x03u) {
     override fun read(s: WasmInputStream): Instruction {
-        val blockType = s.readI33()
+        val blockType = readBlockType(s)
         val body = readBlock(s, false).body1
-        return Loop(if (blockType < 0) null else blockType.toUInt(), body)
+        return Loop(blockType, body)
     }
 }
 
-class Loop(val blockType: TypeIdx?, val body: Expression) : Instruction(LoopDescriptor) {
+class Loop(val blockType: BlockType, val body: Expression) : Instruction(LoopDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        if (blockType == null) {
-            val label = LoopLabel(body)
-            stack.pushLabel(label)
-            config.thread.frame.module.executeLabel(label, config, stack)
-        } else {
-            val type = config.thread.frame.module.types[blockType.toInt()]
-            val values = stack.popTopValues()
-            assert(values.size == type.parameters.size)
-            val label = LoopLabel(body)
-            stack.pushLabel(label)
-            for (v in values.reversed())
-                stack.pushValue(v)
-            config.thread.frame.module.executeLabel(label, config, stack)
-        }
+        val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
+        val values = stack.popTopValues()
+        assert(values.size == type.parameters.size)
+        val label = LoopLabel(body)
+        stack.pushLabel(label)
+        for (v in values.reversed())
+            stack.pushValue(v)
+        config.thread.frame.module.executeLabel(label, config, stack)
     }
 }
 
