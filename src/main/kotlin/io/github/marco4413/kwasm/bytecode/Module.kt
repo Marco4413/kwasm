@@ -12,11 +12,17 @@ class UnsupportedWasmVersion(got: U32, expected: U32) :
 
 const val StartSectionId: U8 = 8u
 
-class Module(val magic: U32, val version: U32,
-             val types: TypeSection, val imports: ImportSection,
-             val functions: FunctionSection, val memories: MemorySection,
-             val exports: ExportSection, val start: FunctionIdx?,
-             val code: CodeSection, val data: DataSection) {
+class Module(val magic: U32,
+             val version: U32,
+             val customs: CustomSection,
+             val types: TypeSection,
+             val imports: ImportSection,
+             val functions: FunctionSection,
+             val memories: MemorySection,
+             val exports: ExportSection,
+             val start: FunctionIdx?,
+             val code: CodeSection,
+             val data: DataSection) {
     companion object {
         const val WASM_MAGIC: U32 = 1836278016u
         const val WASM_VERSION: U32 = 1u
@@ -29,6 +35,7 @@ class Module(val magic: U32, val version: U32,
             val version = s.readRawU32()
             if (version != WASM_VERSION) throw UnsupportedWasmVersion(version, WASM_VERSION)
 
+            val customs = ArrayList<Custom>()
             val types = ArrayList<FunctionType>()
             val imports = ArrayList<Import>()
             val functions = ArrayList<TypeIdx>()
@@ -40,7 +47,7 @@ class Module(val magic: U32, val version: U32,
 
             while (s.available() > 0) {
                 when (val sId = s.readU8()) {
-                    CustomSectionId -> readCustomSection(s, sId)
+                    CustomSectionId -> customs.addAll(readCustomSection(s))
                     TypeSectionId -> types.addAll(readTypeSection(s))
                     ImportSectionId -> imports.addAll(readImportSection(s))
                     FunctionSectionId -> functions.addAll(readFunctionSection(s))
@@ -53,7 +60,7 @@ class Module(val magic: U32, val version: U32,
                 }
             }
 
-            return Module(magic, version, types, imports, functions, memories, exports, start, code, data)
+            return Module(magic, version, customs, types, imports, functions, memories, exports, start, code, data)
         }
     }
 }

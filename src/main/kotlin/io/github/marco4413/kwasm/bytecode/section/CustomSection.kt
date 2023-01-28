@@ -1,13 +1,19 @@
 package io.github.marco4413.kwasm.bytecode.section
 
-import io.github.marco4413.kwasm.bytecode.U32
-import io.github.marco4413.kwasm.bytecode.U8
-import io.github.marco4413.kwasm.bytecode.WasmInputStream
+import io.github.marco4413.kwasm.bytecode.*
+
+class Custom(val name: Name, val data: List<U8>)
 
 const val CustomSectionId: U8 = 0u
-class CustomSection(val id: U8, val size: U32, val data: List<U8>)
+typealias CustomSection = List<Custom>
 
-fun readCustomSection(s: WasmInputStream, sId: U8) : CustomSection {
-    val data = s.readVector { s.readU8() }
-    return CustomSection(sId, data.size.toUInt(), data)
+fun readCustomSection(s: WasmInputStream) : CustomSection {
+    val bytes = s.readVector { s.readU8().toByte() }
+    val cStream = WasmInputStream(bytes.toByteArray().inputStream())
+    // custom ::== name byte*
+    val name = cStream.readName()
+    val data = ArrayList<U8>()
+    while (cStream.available() > 0) data.add(cStream.readU8())
+
+    return listOf(Custom(name, data))
 }
