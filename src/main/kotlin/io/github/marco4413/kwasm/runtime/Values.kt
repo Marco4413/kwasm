@@ -9,15 +9,15 @@ abstract class Value(val type: ValueType) {
 // So U32/U64 aren't instances of Any. Interesting.
 class ValueI32(val value: I32) : Value(ValueType.I32) { override fun getValue(): Any = value }
 class ValueI64(val value: I64) : Value(ValueType.I64) { override fun getValue(): Any = value }
-class ValueU32(val value: U32) : Value(ValueType.U32) { override fun getValue(): Any = value }
-class ValueU64(val value: U64) : Value(ValueType.U64) { override fun getValue(): Any = value }
+class ValueF32(val value: F32) : Value(ValueType.F32) { override fun getValue(): Any = value }
+class ValueF64(val value: F64) : Value(ValueType.F64) { override fun getValue(): Any = value }
 
 fun getDefaultForValueType(type: ValueType) : Value {
     return when (type) {
         ValueType.I32 -> ValueI32(0)
         ValueType.I64 -> ValueI64(0)
-        ValueType.U32 -> ValueU32(0u)
-        ValueType.U64 -> ValueU64(0u)
+        ValueType.F32 -> ValueF32(0.0f)
+        ValueType.F64 -> ValueF64(0.0)
         ValueType.V128 -> TODO()
         ValueType.FunctionRef -> TODO()
         ValueType.ExternalRef -> TODO()
