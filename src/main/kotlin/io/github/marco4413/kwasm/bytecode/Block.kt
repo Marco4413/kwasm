@@ -8,7 +8,14 @@ const val BlockElse: U8 = 0x05u
 const val BlockEnd: U8 = 0x0Bu
 const val BlockVoid: U8 = 0x40u
 
-class BlockType(val type: FunctionType?, val typeIdx: TypeIdx)
+class BlockType(val type: FunctionType?, val typeIdx: TypeIdx) {
+    companion object {
+        val Void = BlockType(FunctionType(listOf(), listOf()), TypeIdx.MAX_VALUE)
+        fun withResults(vararg type: ValueType) =
+            BlockType(FunctionType(listOf(), listOf(*type)), TypeIdx.MAX_VALUE)
+    }
+}
+
 typealias Expression = List<Instruction>
 class Block(val body1: Expression, val body2: Expression)
 
@@ -19,8 +26,8 @@ fun readBlockType(s: WasmInputStream) : BlockType {
         s.reset()
         val type = s.readU8()
         if (type == BlockVoid)
-            return BlockType(FunctionType(listOf(), listOf()), TypeIdx.MAX_VALUE)
-        return BlockType(FunctionType(listOf(), listOf(ValueType.fromValue(type))), TypeIdx.MAX_VALUE)
+            return BlockType.Void
+        return BlockType.withResults(ValueType.fromValue(type))
     }
     return BlockType(null, blockType.toUInt())
 }
