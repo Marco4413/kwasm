@@ -4,9 +4,9 @@ import io.github.marco4413.kwasm.bytecode.U32
 import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
 
-class Limit(val min: U32, val max: U32 = U32.MAX_VALUE) {
-    private val _range = min..max
-    fun isValid() : Boolean = min <= max
+class Limit(val min: U32, val max: U32? = null) {
+    private val _range = min..(max ?: U32.MAX_VALUE)
+    fun isValid() : Boolean = max != null && min <= max
     operator fun contains(v: U32) : Boolean = v in _range
 }
 
