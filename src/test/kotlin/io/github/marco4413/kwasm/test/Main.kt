@@ -4,4 +4,5 @@ fun main(args: Array<String>) {
     val test = KwasmTest()
     test.testPrintString()
     test.testWriteModule()
+    test.testCompilePrintString()
 }
