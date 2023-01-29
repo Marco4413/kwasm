@@ -155,7 +155,7 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
         }
 
         val stack = Stack()
-        for (v in params) stack.pushValue(v)
+        for (v in params.reversed()) stack.pushValue(v)
 
         val trap = invoke(addr, stack)
         if (trap != null) return InvocationResult(listOf(), trap)
