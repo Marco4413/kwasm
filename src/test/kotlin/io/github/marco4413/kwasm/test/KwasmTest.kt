@@ -2,7 +2,6 @@ package io.github.marco4413.kwasm.test
 
 import io.github.marco4413.kwasm.bytecode.BlockType
 import io.github.marco4413.kwasm.bytecode.Module
-import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.ValueType
 import io.github.marco4413.kwasm.bytecode.section.*
 import io.github.marco4413.kwasm.instructions.*
@@ -50,7 +49,7 @@ class KwasmTest {
     @Test
     fun testPrintString() {
         println("TEST: Print String")
-        val module = Module.fromStream(openResource("/print_string.wasm"))
+        val module = Module.read(openResource("/print_string.wasm"))
         runPrintString(module)
     }
 
@@ -58,7 +57,7 @@ class KwasmTest {
     fun testWriteModule() {
         println("TEST: Write Module")
         val fileBytes = openResource("/print_string.wasm").readBytes()
-        val module = Module.fromStream(openResource("/print_string.wasm"))
+        val module = Module.read(openResource("/print_string.wasm"))
 
         val moduleBytes = ArrayList<Byte>()
         val stream = object : OutputStream() {
@@ -109,7 +108,7 @@ class KwasmTest {
             ))
         ).write(oStream)
 
-        val module = Module.fromStream(oStream.toByteArray().inputStream())
+        val module = Module.read(oStream.toByteArray().inputStream())
         runPrintString(module)
     }
 }

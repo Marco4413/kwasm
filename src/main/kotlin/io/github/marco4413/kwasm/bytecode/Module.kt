@@ -28,7 +28,7 @@ class Module(val magic: U32,
         const val WASM_MAGIC: U32 = 1836278016u
         const val WASM_VERSION: U32 = 1u
 
-        fun fromStream(inStream: InputStream) : Module {
+        fun read(inStream: InputStream) : Module {
             val s = WasmInputStream(inStream)
 
             val magic = s.readRawU32()
