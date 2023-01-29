@@ -58,7 +58,7 @@ fun readBlock(s: WasmInputStream, allowElse: Boolean = true) : Block {
             atBody1 = false
         } else if (opcode == BlockEnd) break
 
-        val instr = Instruction.fromStream(s, opcode)
+        val instr = Instruction.read(s, opcode)
         if (atBody1) body1.add(instr)
         else body2.add(instr)
     }

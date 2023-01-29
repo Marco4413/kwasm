@@ -6,7 +6,6 @@ import io.github.marco4413.kwasm.bytecode.WasmInputStream
 import io.github.marco4413.kwasm.bytecode.WasmOutputStream
 import io.github.marco4413.kwasm.runtime.Configuration
 import io.github.marco4413.kwasm.runtime.Stack
-import java.io.OutputStream
 
 fun createInstructionMap(vararg descriptor: InstructionDescriptor) : MutableMap<U8, InstructionDescriptor> {
     val map = mutableMapOf<U8, InstructionDescriptor>()
@@ -43,7 +42,7 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
             MemoryRelatedDescriptor
         )
 
-        fun fromStream(s: WasmInputStream, _opcode: U8? = null) : Instruction {
+        fun read(s: WasmInputStream, _opcode: U8? = null) : Instruction {
             // TODO: Move this to Module.kt?
             val opcode = _opcode ?: s.readU8()
             val descriptor = instr[opcode]
