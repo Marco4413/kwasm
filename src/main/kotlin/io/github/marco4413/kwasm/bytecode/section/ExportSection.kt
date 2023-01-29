@@ -1,9 +1,6 @@
 package io.github.marco4413.kwasm.bytecode.section
 
-import io.github.marco4413.kwasm.bytecode.Name
-import io.github.marco4413.kwasm.bytecode.U32
-import io.github.marco4413.kwasm.bytecode.U8
-import io.github.marco4413.kwasm.bytecode.WasmInputStream
+import io.github.marco4413.kwasm.bytecode.*
 
 enum class ExportType(val value: U8) {
     Function(0u),
@@ -36,5 +33,17 @@ fun readExportSection(s: WasmInputStream) : ExportSection {
         Export(s.readName(), ExportDescription(
             ExportType.fromValue(s.readU8()), s.readU32()
         ))
+    }
+}
+
+fun writeExportSection(s: WasmOutputStream, sec: ExportSection) {
+    s.writeU8(ExportSectionId)
+    s.writeSize {
+        s.writeVector(sec) {
+            _, export ->
+            s.writeName(export.name)
+            s.writeU8(export.description.type.value)
+            s.writeU32(export.description.idx)
+        }
     }
 }

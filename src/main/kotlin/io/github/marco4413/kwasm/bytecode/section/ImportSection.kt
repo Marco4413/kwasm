@@ -59,3 +59,30 @@ fun readImportSection(s: WasmInputStream) : ImportSection {
         })
     }
 }
+
+fun writeImportSection(s: WasmOutputStream, sec: ImportSection) {
+    s.writeU8(ImportSectionId)
+    s.writeSize {
+        s.writeVector(sec) {
+            _, import ->
+            s.writeName(import.module)
+            s.writeName(import.name)
+            val importDesc = import.description
+            s.writeU8(importDesc.type.value)
+            when (importDesc.type) {
+                ImportType.Function -> {
+                    importDesc as ImportDescriptionFunction
+                    s.writeU32(importDesc.typeIdx)
+                }
+                ImportType.Table -> TODO()
+                ImportType.Memory -> TODO()
+                ImportType.Global -> {
+                    importDesc as ImportDescriptionGlobal
+                    s.writeU8(importDesc.value.type.value)
+                    s.writeU8(importDesc.value.mutability.value)
+                }
+            }
+
+        }
+    }
+}

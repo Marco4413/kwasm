@@ -3,6 +3,7 @@ package io.github.marco4413.kwasm.bytecode.section
 import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.ValueType
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
+import io.github.marco4413.kwasm.bytecode.WasmOutputStream
 
 
 const val FunctionTypeId: UByte = 96u
@@ -37,5 +38,21 @@ fun readTypeSection(s: WasmInputStream) : TypeSection {
             TODO("Unsupported Type $id")
         FunctionType(s.readVector { ValueType.fromValue(s.readU8()) },
             s.readVector { ValueType.fromValue(s.readU8()) })
+    }
+}
+
+fun writeTypeSection(s: WasmOutputStream, sec: TypeSection) {
+    s.writeU8(TypeSectionId)
+    s.writeSize {
+        s.writeVector(sec) {
+            _, type ->
+            s.writeU8(FunctionTypeId)
+            s.writeVector(type.parameters) {
+                _, valueType -> s.writeU8(valueType.value)
+            }
+            s.writeVector(type.results) {
+                _, valueType -> s.writeU8(valueType.value)
+            }
+        }
     }
 }

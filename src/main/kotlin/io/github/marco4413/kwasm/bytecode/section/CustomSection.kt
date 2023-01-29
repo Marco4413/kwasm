@@ -17,3 +17,14 @@ fun readCustomSection(s: WasmInputStream) : CustomSection {
 
     return listOf(Custom(name, data))
 }
+
+fun writeCustomSection(s: WasmOutputStream, sec: CustomSection) {
+    for (custom in sec) {
+        s.writeU8(CustomSectionId)
+        s.writeSize {
+            s.writeName(custom.name)
+            for (byte in custom.data)
+                s.writeU8(byte)
+        }
+    }
+}

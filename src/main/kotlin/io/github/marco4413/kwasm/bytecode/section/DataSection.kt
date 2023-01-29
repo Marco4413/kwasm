@@ -24,3 +24,27 @@ fun readDataSection(s: WasmInputStream) : DataSection {
         Data(s.readVector { s.readU8() }, mode)
     }
 }
+
+fun writeDataSection(s: WasmOutputStream, sec: DataSection) {
+    s.writeU8(DataSectionId)
+    s.writeSize {
+        s.writeVector(sec) {
+            _, data ->
+            when (data.mode.type) {
+                DataModeType.Passive ->
+                    s.writeU8(1u)
+                DataModeType.Active -> {
+                    data.mode as DataModeActive
+                    if (data.mode.memory == 0u) {
+                        s.writeU8(0u)
+                    } else {
+                        s.writeU8(2u)
+                        s.writeU32(data.mode.memory)
+                    }
+                    writeExpression(s, data.mode.offset)
+                }
+            }
+            s.writeVector(data.init) { _, byte -> s.writeU8(byte) }
+        }
+    }
+}

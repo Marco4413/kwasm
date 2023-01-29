@@ -3,6 +3,7 @@ package io.github.marco4413.kwasm.bytecode
 import io.github.marco4413.kwasm.bytecode.section.*
 import io.github.marco4413.kwasm.bytecode.section.Function
 import java.io.InputStream
+import java.io.OutputStream
 import java.lang.RuntimeException
 
 class InvalidWasmFile :
@@ -62,5 +63,22 @@ class Module(val magic: U32,
 
             return Module(magic, version, customs, types, imports, functions, memories, exports, start, code, data)
         }
+    }
+
+    fun write(oStream: OutputStream) {
+        val s = WasmOutputStream(oStream)
+        s.writeRawU32(magic)
+        s.writeRawU32(version)
+        writeTypeSection(s, types)
+        writeImportSection(s, imports)
+        writeFunctionSection(s, functions)
+        writeMemorySection(s, memories)
+        writeExportSection(s, exports)
+        if (start != null)
+            s.writeSize { s.writeU32(start) }
+        writeCodeSection(s, code)
+        writeDataSection(s, data)
+        writeCustomSection(s, customs)
+        s.flush()
     }
 }

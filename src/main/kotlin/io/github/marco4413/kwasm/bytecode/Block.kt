@@ -25,6 +25,19 @@ fun readBlockType(s: WasmInputStream) : BlockType {
     return BlockType(null, blockType.toUInt())
 }
 
+fun writeBlockType(s: WasmOutputStream, blockType: BlockType) {
+    if (blockType.type == null) {
+        s.writeU32(blockType.typeIdx)
+        return
+    }
+    assert(blockType.type.parameters.isEmpty())
+    when (blockType.type.results.size) {
+        0 -> s.writeU8(BlockVoid)
+        1 -> s.writeU8(blockType.type.results[0].value)
+        else -> assert(false)
+    }
+}
+
 /** Doesn't parse Block Types */
 fun readBlock(s: WasmInputStream, allowElse: Boolean = true) : Block {
     var atBody1 = true
@@ -44,4 +57,15 @@ fun readBlock(s: WasmInputStream, allowElse: Boolean = true) : Block {
     }
 
     return Block(body1, body2)
+}
+
+fun writeBlock(s: WasmOutputStream, block: Block) {
+    for (instr in block.body1)
+        instr.write(s)
+    if (block.body2.isNotEmpty()) {
+        s.writeU8(BlockElse)
+        for (instr in block.body2)
+            instr.write(s)
+    }
+    s.writeU8(BlockEnd)
 }

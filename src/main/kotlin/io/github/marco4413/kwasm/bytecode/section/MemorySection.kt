@@ -3,6 +3,7 @@ package io.github.marco4413.kwasm.bytecode.section
 import io.github.marco4413.kwasm.bytecode.U32
 import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
+import io.github.marco4413.kwasm.bytecode.WasmOutputStream
 
 class Limit(val min: U32, val max: U32? = null) {
     private val _range = min..(max ?: U32.MAX_VALUE)
@@ -18,6 +19,18 @@ fun readLimit(s: WasmInputStream) : Limit {
     }
 }
 
+fun writeLimit(s: WasmOutputStream, lim: Limit) {
+    if (lim.max == null) {
+        s.writeU8(0u)
+        s.writeU32(lim.min)
+        return
+    }
+
+    s.writeU8(1u)
+    s.writeU32(lim.min)
+    s.writeU32(lim.max)
+}
+
 typealias MemoryType = Limit
 class Memory(val type: MemoryType)
 
@@ -27,4 +40,13 @@ typealias MemorySection = List<Memory>
 fun readMemorySection(s: WasmInputStream) : MemorySection {
     s.readU32() // SIZE
     return s.readVector { Memory(readLimit(s)) }
+}
+
+fun writeMemorySection(s: WasmOutputStream, sec: MemorySection) {
+    s.writeU8(MemorySectionId)
+    s.writeSize {
+        s.writeVector(sec) {
+            _, memory -> writeLimit(s, memory.type)
+        }
+    }
 }

@@ -11,6 +11,9 @@ typealias CodeSection = List<Function>
 fun readExpression(s: WasmInputStream) : Expression =
     readBlock(s, false).body1
 
+fun writeExpression(s: WasmOutputStream, expr: Expression) =
+    writeBlock(s, Block(expr, listOf()))
+
 fun readCodeSection(s: WasmInputStream) : CodeSection {
     s.readU32() // SIZE
     return s.readVector {
@@ -18,5 +21,22 @@ fun readCodeSection(s: WasmInputStream) : CodeSection {
         Function(s.readVector {
             Locals(s.readU32(), ValueType.fromValue(s.readU8()))
         }, readExpression(s))
+    }
+}
+
+fun writeCodeSection(s: WasmOutputStream, sec: CodeSection) {
+    s.writeU8(CodeSectionId)
+    s.writeSize {
+        s.writeVector(sec) {
+            _, func ->
+            s.writeSize {
+                s.writeVector(func.locals) {
+                    _, local ->
+                    s.writeU32(local.count)
+                    s.writeU8(local.type.value)
+                }
+                writeExpression(s, func.body)
+            }
+        }
     }
 }
