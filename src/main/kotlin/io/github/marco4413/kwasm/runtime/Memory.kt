@@ -40,7 +40,6 @@ class MemoryInstance(type: MemoryType) {
     fun setF32(index: U32, value: F32) = setI32(index, value.toRawBits())
     fun setI32(index: U32, value: I32) = setU32(index, value.toUInt())
     fun setU32(index: U32, value: U32) {
-        println(index)
         this[index   ] = (value       ).toUByte()
         this[index+1u] = (value shr  8).toUByte()
         this[index+2u] = (value shr 16).toUByte()
