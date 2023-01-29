@@ -24,7 +24,7 @@ Elements, Tables and 'partially' Globals are not yet supported.
 I plan on adding support for Wat parsing (or a custom language) in the future.
 
 Here's a rough list of the supported features:
-- [ ] Binary Format
+- [ ] Binary Format (read/write)
   - [x] Values
   - [ ] Types
     - [x] Value Types
