@@ -136,7 +136,7 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
     fun invoke(export: ExportInstance, params: List<Value>) : List<Value> {
         if (export.value.type != ExternalType.FunctionAddress)
             throw InvalidExternalTypeException(ExternalType.FunctionAddress, export.value.type)
-        println("Invoking ${export.name}")
+        // println("Invoking ${export.name}")
         return invoke(export.value.address, params)
     }
 
