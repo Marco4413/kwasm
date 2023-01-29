@@ -1,6 +1,5 @@
 package io.github.marco4413.kwasm.instructions
 
-import io.github.marco4413.kwasm.Trap
 import io.github.marco4413.kwasm.bytecode.*
 import io.github.marco4413.kwasm.bytecode.section.writeExpression
 import io.github.marco4413.kwasm.runtime.*
@@ -11,7 +10,7 @@ val UnreachableDescriptor = object : InstructionDescriptor("unreachable", 0x00u)
 
 class Unreachable : Instruction(UnreachableDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        throw Trap("Unreachable")
+        trap(config, stack, UnreachableTrap(config))
     }
 }
 
@@ -163,7 +162,9 @@ val CallDescriptor = object : InstructionDescriptor("call", 0x10u) {
 class Call(val funcIdx: FunctionIdx) : Instruction(CallDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val addr = config.thread.frame.module.functions[funcIdx.toInt()]
-        config.thread.frame.module.invoke(addr, stack)
+        val trap = config.thread.frame.module.invoke(addr, stack)
+        // Propagate Trap to next Frame
+        if (trap != null) trap(config, stack, trap)
     }
 
     override fun write(s: WasmOutputStream) {

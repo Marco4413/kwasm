@@ -15,6 +15,7 @@ import java.lang.StringBuilder
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 fun openResource(name: String) : InputStream {
     val resource = Module.Companion::class.java.getResourceAsStream(name)
@@ -41,8 +42,9 @@ class KwasmTest {
 
         val print = instance.exports["print"]
             ?: throw NullPointerException()
-        instance.invoke(print, listOf(ValueI32(0)))
+        val result = instance.invoke(print, listOf(ValueI32(0)))
 
+        assertNull(result.trap)
         assertEquals("Hello World!", buffer.toString())
     }
 

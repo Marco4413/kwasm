@@ -11,8 +11,8 @@ import io.github.marco4413.kwasm.instructions.MemoryInit
 import java.lang.IllegalStateException
 import kotlin.collections.ArrayList
 
-class ExportInstance(val name: Name,
-                     val value: ExternalValue)
+class InvocationResult(val results: List<Value>, val trap: Trap?)
+class ExportInstance(val name: Name, val value: ExternalValue)
 
 class ModuleInstance(val store: Store, module: Module, imports: Map<Name, ExternalValue>) {
     val types: List<FunctionType>
@@ -121,7 +121,10 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
         }
 
         stack.popFrame()
-        if (module.start != null) invoke(functions[module.start.toInt()], stack)
+        if (module.start != null) {
+            val trap = invoke(functions[module.start.toInt()], stack)
+            if (trap != null) throw TrapException(trap)
+        }
     }
 
     fun executeLabel(label: Label, config: Configuration, stack: Stack) {
@@ -133,14 +136,14 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
             stack.popLastLabel()
     }
 
-    fun invoke(export: ExportInstance, params: List<Value>) : List<Value> {
+    fun invoke(export: ExportInstance, params: List<Value>) : InvocationResult {
         if (export.value.type != ExternalType.FunctionAddress)
             throw InvalidExternalTypeException(ExternalType.FunctionAddress, export.value.type)
         // println("Invoking ${export.name}")
         return invoke(export.value.address, params)
     }
 
-    fun invoke(addr: Address, params: List<Value>) : List<Value> {
+    fun invoke(addr: Address, params: List<Value>) : InvocationResult {
         val f = store.functions[addr.toInt()]
         if (params.size != f.type.parameters.size)
             throw IllegalArgumentCountException(addr, f.type.parameters.size.toUInt(), params.size.toUInt())
@@ -153,19 +156,21 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
 
         val stack = Stack()
         for (v in params) stack.pushValue(v)
-        invoke(addr, stack)
 
-        return List(f.type.results.size) {
+        val trap = invoke(addr, stack)
+        if (trap != null) return InvocationResult(listOf(), trap)
+
+        return InvocationResult(List(f.type.results.size) {
             val index = f.type.results.size - it - 1
             val expectedType = f.type.results[index]
             val value = stack.popValue()
             if (value.type != expectedType)
                 throw InvalidResultTypeException(addr, index.toUInt(), expectedType, value.type)
             value
-        }
+        }, null)
     }
 
-    fun invoke(addr: Address, stack: Stack) {
+    fun invoke(addr: Address, stack: Stack) : Trap? {
         val func = store.functions[addr.toInt()]
 
         val locals = MutableList(func.type.parameters.size) {
@@ -176,7 +181,7 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
             value
         }
 
-        when (func) {
+        return when (func) {
             is ModuleFunctionInstance -> {
                 for (i in func.code.locals.indices) {
                     val codeLocals = func.code.locals[i]
@@ -192,12 +197,15 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
                 executeLabel(label, config, stack)
                 if (stack.lastFrame == config.thread.frame)
                     stack.popLastFrame()
+                config.thread.trap
             }
             is HostFunctionInstance -> {
                 val config = Configuration(store, ComputationThread(Frame(locals, this), listOf()))
                 stack.pushFrame(config.thread.frame)
                 func.code(config, stack)
-                stack.popLastFrame()
+                if (stack.lastFrame == config.thread.frame)
+                    stack.popLastFrame()
+                config.thread.trap
             }
             else -> throw IllegalStateException("Invoking an unsupported Function Instance")
         }

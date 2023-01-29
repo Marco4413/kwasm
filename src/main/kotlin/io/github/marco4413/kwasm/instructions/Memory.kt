@@ -1,14 +1,11 @@
 package io.github.marco4413.kwasm.instructions
 
-import io.github.marco4413.kwasm.Trap
 import io.github.marco4413.kwasm.UnknownInstructionException
 import io.github.marco4413.kwasm.bytecode.DataIdx
 import io.github.marco4413.kwasm.bytecode.U32
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
 import io.github.marco4413.kwasm.bytecode.WasmOutputStream
-import io.github.marco4413.kwasm.runtime.Configuration
-import io.github.marco4413.kwasm.runtime.Stack
-import io.github.marco4413.kwasm.runtime.ValueI32
+import io.github.marco4413.kwasm.runtime.*
 
 class MemoryArgument(val align: U32, val offset: U32)
 
@@ -21,8 +18,10 @@ class I32Load8U(val memoryArg: MemoryArgument) : Instruction(I32Load8UDescriptor
         val memory = config.store.getMemory(config.thread.frame.module.memories[0])
         val baseAddr = stack.popValue() as ValueI32
         val addr = (baseAddr.value + memoryArg.offset.toInt()).toUInt()
-        if ((addr + 1u).toInt() > memory.data.size)
-            throw Trap("Memory out of bounds.")
+        if ((addr + 1u).toInt() > memory.data.size) {
+            trap(config, stack, MemoryIndexOutOfBoundsTrap(config))
+            return
+        }
         stack.pushValue(ValueI32(memory[addr].toInt()))
     }
 
@@ -56,10 +55,15 @@ class MemoryInit(val dataIdx: DataIdx) : Instruction(MemoryRelatedDescriptor) {
         val source = stack.popValue() as ValueI32
         val target = stack.popValue() as ValueI32
 
-        if (source.value + length.value > data.data.size)
-            throw Trap("Data out of bounds.")
-        if (target.value + length.value > memory.data.size)
-            throw Trap("Memory out of bounds.")
+        if (source.value + length.value > data.data.size) {
+            trap(config, stack, DataIndexOutOfBoundsTrap(config))
+            return
+        }
+
+        if (target.value + length.value > memory.data.size) {
+            trap(config, stack, MemoryIndexOutOfBoundsTrap(config))
+            return
+        }
 
         for (i in 0 until length.value)
             memory[target.value + i] = data.data[source.value + i]

@@ -5,10 +5,12 @@ import io.github.marco4413.kwasm.bytecode.section.FunctionType
 import io.github.marco4413.kwasm.bytecode.section.ImportType
 import io.github.marco4413.kwasm.runtime.ExternalType
 import io.github.marco4413.kwasm.runtime.StackValueType
+import io.github.marco4413.kwasm.runtime.Trap
 import java.lang.RuntimeException
 
-open class Trap(message: String) : RuntimeException(message) // TODO: Find a neater way to handle Traps
 open class WasmRuntimeException(message: String) : RuntimeException(message)
+
+class TrapException(trap: Trap) : WasmRuntimeException(trap.message)
 
 class StackTypeException(expected: StackValueType, got: StackValueType?) :
         WasmRuntimeException("Expected Stack Item Type $expected, got $got")
