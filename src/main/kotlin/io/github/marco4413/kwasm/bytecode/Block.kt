@@ -56,6 +56,7 @@ fun readBlock(s: WasmInputStream, allowElse: Boolean = true) : Block {
         if (opcode == BlockElse) {
             if (!(allowElse && atBody1)) throw IllegalStateException("Invalid Block")
             atBody1 = false
+            continue
         } else if (opcode == BlockEnd) break
 
         val instr = Instruction.read(s, opcode)
