@@ -69,16 +69,15 @@ class Module(val magic: U32,
         val s = WasmOutputStream(oStream)
         s.writeRawU32(magic)
         s.writeRawU32(version)
-        writeTypeSection(s, types)
-        writeImportSection(s, imports)
-        writeFunctionSection(s, functions)
-        writeMemorySection(s, memories)
-        writeExportSection(s, exports)
-        if (start != null)
-            s.writeSize { s.writeU32(start) }
-        writeCodeSection(s, code)
-        writeDataSection(s, data)
-        writeCustomSection(s, customs)
+        if (types.isNotEmpty()) writeTypeSection(s, types)
+        if (imports.isNotEmpty()) writeImportSection(s, imports)
+        if (functions.isNotEmpty()) writeFunctionSection(s, functions)
+        if (memories.isNotEmpty()) writeMemorySection(s, memories)
+        if (exports.isNotEmpty()) writeExportSection(s, exports)
+        if (start != null) s.writeSize { s.writeU32(start) }
+        if (code.isNotEmpty()) writeCodeSection(s, code)
+        if (data.isNotEmpty()) writeDataSection(s, data)
+        if (customs.isNotEmpty()) writeCustomSection(s, customs)
         s.flush()
     }
 }
