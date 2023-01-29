@@ -2,6 +2,7 @@ package io.github.marco4413.kwasm.instructions
 
 import io.github.marco4413.kwasm.Trap
 import io.github.marco4413.kwasm.bytecode.*
+import io.github.marco4413.kwasm.bytecode.section.writeExpression
 import io.github.marco4413.kwasm.runtime.*
 
 val UnreachableDescriptor = object : InstructionDescriptor("unreachable", 0x00u) {
@@ -41,6 +42,12 @@ class InstrBlock(val blockType: BlockType, val body: Expression) : Instruction(B
             stack.pushValue(v)
         config.thread.frame.module.executeLabel(label, config, stack)
     }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        writeBlockType(s, blockType)
+        writeExpression(s, body)
+    }
 }
 
 val LoopDescriptor = object : InstructionDescriptor("loop", 0x03u) {
@@ -61,6 +68,12 @@ class Loop(val blockType: BlockType, val body: Expression) : Instruction(LoopDes
         for (v in values.reversed())
             stack.pushValue(v)
         config.thread.frame.module.executeLabel(label, config, stack)
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        writeBlockType(s, blockType)
+        writeExpression(s, body)
     }
 }
 
@@ -84,6 +97,10 @@ val BrDescriptor = object : InstructionDescriptor("br", 0x0Cu) {
 
 class Br(val labelIdx: LabelIdx) : Instruction(BrDescriptor) {
     override fun execute(config: Configuration, stack: Stack) = br(labelIdx, config, stack)
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeU32(labelIdx)
+    }
 }
 
 val BrIfDescriptor = object : InstructionDescriptor("br_if", 0x0Du) {
@@ -94,6 +111,11 @@ class BrIf(val labelIdx: LabelIdx) : Instruction(BrIfDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val c = stack.popValue() as ValueI32
         if (c.value != 0) br(labelIdx, config, stack)
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeU32(labelIdx)
     }
 }
 
@@ -106,6 +128,12 @@ class BrTable(val branches: List<LabelIdx>, val lastBranch: LabelIdx) : Instruct
         val lI = stack.popValue() as ValueI32
         val labelIdx = if (lI.value < branches.size) branches[lI.value] else lastBranch
         br(labelIdx, config, stack)
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeVector(branches) { _, idx -> s.writeU32(idx) }
+        s.writeU32(lastBranch)
     }
 }
 
@@ -136,5 +164,10 @@ class Call(val funcIdx: FunctionIdx) : Instruction(CallDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val addr = config.thread.frame.module.functions[funcIdx.toInt()]
         config.thread.frame.module.invoke(addr, stack)
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeU32(funcIdx)
     }
 }

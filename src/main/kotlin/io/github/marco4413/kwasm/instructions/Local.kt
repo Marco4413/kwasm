@@ -2,6 +2,7 @@ package io.github.marco4413.kwasm.instructions
 
 import io.github.marco4413.kwasm.bytecode.LocalIdx
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
+import io.github.marco4413.kwasm.bytecode.WasmOutputStream
 import io.github.marco4413.kwasm.runtime.Configuration
 import io.github.marco4413.kwasm.runtime.Stack
 
@@ -13,7 +14,11 @@ class LocalGet(val index: LocalIdx) : Instruction(LocalGetDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val local = config.thread.frame.locals[index.toInt()]
         stack.pushValue(local)
-        // println("Local Get $index as ${(local as ValueI32).value}")
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeU32(index)
     }
 }
 
@@ -25,7 +30,11 @@ class LocalSet(val index: LocalIdx) : Instruction(LocalSetDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val value = stack.popValue()
         config.thread.frame.locals[index.toInt()] = value
-        // println("Local Set $index to ${(value as ValueI32).value}")
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeU32(index)
     }
 }
 
@@ -38,6 +47,10 @@ class LocalTee(val index: LocalIdx) : Instruction(LocalTeeDescriptor) {
         val value = stack.popValue()
         stack.pushValue(value)
         config.thread.frame.locals[index.toInt()] = value
-        // println("Local Tee $index to ${(value as ValueI32).value}")
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeU32(index)
     }
 }

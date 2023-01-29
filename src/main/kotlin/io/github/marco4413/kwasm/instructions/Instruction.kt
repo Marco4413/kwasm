@@ -3,6 +3,7 @@ package io.github.marco4413.kwasm.instructions
 import io.github.marco4413.kwasm.UnknownInstructionException
 import io.github.marco4413.kwasm.bytecode.U8
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
+import io.github.marco4413.kwasm.bytecode.WasmOutputStream
 import io.github.marco4413.kwasm.runtime.Configuration
 import io.github.marco4413.kwasm.runtime.Stack
 import java.io.OutputStream
@@ -52,7 +53,5 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
     }
 
     abstract fun execute(config: Configuration, stack: Stack)
-    open fun write(s: OutputStream) {
-        s.write(descriptor.opcode.toInt())
-    }
+    open fun write(s: WasmOutputStream) { s.writeU8(descriptor.opcode) }
 }

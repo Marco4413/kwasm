@@ -2,6 +2,7 @@ package io.github.marco4413.kwasm.instructions
 
 import io.github.marco4413.kwasm.bytecode.I32
 import io.github.marco4413.kwasm.bytecode.WasmInputStream
+import io.github.marco4413.kwasm.bytecode.WasmOutputStream
 import io.github.marco4413.kwasm.runtime.Configuration
 import io.github.marco4413.kwasm.runtime.Stack
 import io.github.marco4413.kwasm.runtime.ValueI32
@@ -11,9 +12,10 @@ val I32ConstDescriptor = object : InstructionDescriptor("i32.const", 0x41u) {
 }
 
 class I32Const(val value: I32) : Instruction(I32ConstDescriptor) {
-    override fun execute(config: Configuration, stack: Stack) {
-        stack.pushValue(ValueI32(value))
-        // println("Const $value")
+    override fun execute(config: Configuration, stack: Stack) { stack.pushValue(ValueI32(value)) }
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeI32(value)
     }
 }
 
