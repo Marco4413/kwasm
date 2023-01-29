@@ -6,10 +6,10 @@ abstract class Value(val type: ValueType) {
     abstract fun getValue() : Any?
 }
 
-class ValueI32(val value: I32) : Value(ValueType.I32) { override fun getValue(): Any = value }
-class ValueI64(val value: I64) : Value(ValueType.I64) { override fun getValue(): Any = value }
-class ValueF32(val value: F32) : Value(ValueType.F32) { override fun getValue(): Any = value }
-class ValueF64(val value: F64) : Value(ValueType.F64) { override fun getValue(): Any = value }
+class ValueI32(val value: I32) : Value(ValueType.I32) { override fun getValue(): I32 = value }
+class ValueI64(val value: I64) : Value(ValueType.I64) { override fun getValue(): I64 = value }
+class ValueF32(val value: F32) : Value(ValueType.F32) { override fun getValue(): F32 = value }
+class ValueF64(val value: F64) : Value(ValueType.F64) { override fun getValue(): F64 = value }
 
 fun getDefaultForValueType(type: ValueType) : Value {
     return when (type) {
