@@ -21,8 +21,8 @@ class Stack {
     val labelCount: U32 get() = lStack.size.toUInt()
     val frameCount: U32 get() = fStack.size.toUInt()
 
-    private fun popType(type: StackValueType) {
-        if (lastType != type) throw StackTypeException(type, lastType)
+    private inline fun popType(type: StackValueType) {
+        if (tStack.lastOrNull() != type) throw StackTypeException(type, lastType)
         tStack.removeLast()
     }
 
@@ -36,6 +36,13 @@ class Stack {
         return vStack.removeLast()
     }
 
+    fun popNValues(n: Int) : List<Value> {
+        return List(n) {
+            popType(StackValueType.Value)
+            vStack.removeLast()
+        }
+    }
+
     /** The first element in the returned List is the top-most value on the stack */
     fun popTopValues() : List<Value> {
         val values = ArrayList<Value>()
@@ -46,29 +53,14 @@ class Stack {
         return values
     }
 
-    // fun getTopValues() : List<Value> {
-    //     val values = ArrayList<Value>()
-    //     for (type in tStack.reversed()) {
-    //         if (type != StackValueType.Value) break
-    //         values.add(vStack[vStack.size - values.size - 1])
-    //     }
-    //     return values
-    // }
-
-    // fun getTopValueTypes() : List<ValueType> {
-    //     val valueTypes = ArrayList<ValueType>()
-    //     for (type in tStack.reversed()) {
-    //         if (type != StackValueType.Value) break
-    //         valueTypes.add(vStack[vStack.size - valueTypes.size - 1].type)
-    //     }
-    //     return valueTypes
-    // }
-
-    // inline fun <reified T : Value> popValueType() : T {
-    //     val value = popValue()
-    //     if (value is T) return value
-    //     throw StackTypeException(StackValueType.Value, null)
-    // }
+    fun popAndDiscardTopValues() {
+        for (i in tStack.indices.reversed()) {
+            val type = tStack[i]
+            if (type != StackValueType.Value) break
+            tStack.removeLast()
+            vStack.removeLast()
+        }
+    }
 
     fun pushLabel(l: Label) {
         lStack.add(l)
@@ -89,9 +81,6 @@ class Stack {
         tStack.removeAt(index)
         return lStack.removeLast()
     }
-
-    // fun popLastLabels(n: U32) : List<Label> =
-    //     List(n.toInt()) { popLastLabel() }
 
     fun pushFrame(f: Frame) {
         fStack.add(f)
