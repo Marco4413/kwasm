@@ -33,7 +33,7 @@ val BlockDescriptor = object : InstructionDescriptor("block", 0x02u) {
 class InstrBlock(val blockType: BlockType, val body: Expression) : Instruction(BlockDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
-        val values = stack.popTopValues()
+        val values = stack.popNValues(type.parameters.size)
         assert(values.size == type.parameters.size)
         val label = Label(body)
         stack.pushLabel(label)
@@ -60,7 +60,7 @@ val LoopDescriptor = object : InstructionDescriptor("loop", 0x03u) {
 class Loop(val blockType: BlockType, val body: Expression) : Instruction(LoopDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
-        val values = stack.popTopValues()
+        val values = stack.popNValues(type.parameters.size)
         assert(values.size == type.parameters.size)
         val label = LoopLabel(body)
         stack.pushLabel(label)
@@ -76,12 +76,42 @@ class Loop(val blockType: BlockType, val body: Expression) : Instruction(LoopDes
     }
 }
 
+val IfDescriptor = object : InstructionDescriptor("if", 0x04u) {
+    override fun read(s: WasmInputStream): Instruction {
+        val blockType = readBlockType(s)
+        val block = readBlock(s, true)
+        return If(blockType, block)
+    }
+}
+
+class If(val blockType: BlockType, val block: Block) : Instruction(IfDescriptor) {
+    override fun execute(config: Configuration, stack: Stack) {
+        val cond = stack.popValue() as ValueI32
+        val body = if (cond.value != 0) block.body1 else block.body2
+
+        val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
+        val values = stack.popNValues(type.parameters.size)
+        assert(values.size == type.parameters.size)
+        val label = Label(body)
+        stack.pushLabel(label)
+        for (v in values.reversed())
+            stack.pushValue(v)
+        config.thread.frame.module.executeLabel(label, config, stack)
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        writeBlockType(s, blockType)
+        writeBlock(s, block)
+    }
+}
+
 private fun br(l: LabelIdx, config: Configuration, stack: Stack) {
     val label = stack.getNthLabelFromTop(l)
     val values = stack.popTopValues()
     for (i in 0u..l) {
         while (stack.lastType == StackValueType.Value)
-            stack.popValue()
+            stack.popAndDiscardTopValues()
         assert(stack.lastType == StackValueType.Label)
         stack.popLabel().jumpToEnd()
     }
@@ -146,7 +176,7 @@ class Return : Instruction(ReturnDescriptor) {
         while (stack.lastType != StackValueType.Frame) {
             when (stack.lastType) {
                 StackValueType.Label -> stack.popLabel().jumpToEnd()
-                StackValueType.Value -> stack.popValue()
+                StackValueType.Value -> stack.popAndDiscardTopValues()
                 else -> throw IllegalStateException("Unreachable")
             }
         }
