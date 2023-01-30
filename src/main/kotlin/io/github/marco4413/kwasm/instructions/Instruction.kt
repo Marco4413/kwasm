@@ -23,7 +23,7 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
         private val instr = createInstructionMap(
             // Control
             UnreachableDescriptor, NopDescriptor,
-            BlockDescriptor, LoopDescriptor,
+            BlockDescriptor, LoopDescriptor, IfDescriptor,
             BrDescriptor, BrIfDescriptor, BrTableDescriptor,
             ReturnDescriptor, CallDescriptor,
             // Parametric
@@ -33,12 +33,18 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
             // Global
             GlobalSetDescriptor,
             // I32
-            I32Load8UDescriptor,
             I32ConstDescriptor,
-            I32EqZDescriptor, I32GTUDescriptor,
-            I32AddDescriptor, I32SubDescriptor,
+            I32EqZDescriptor,
+            I32LTUDescriptor, I32GTUDescriptor, I32LEUDescriptor,
+            I32AddDescriptor, I32SubDescriptor, I32MulDescriptor,
             I32AndDescriptor, I32SHLDescriptor, I32SHRSDescriptor,
+            // F64
+            F64ConstDescriptor,
+            F64MulDescriptor,
+            F64ConvertI32UDescriptor,
             // Memory
+            I32Load8UDescriptor, I32StoreDescriptor,
+            F64StoreDescriptor,
             MemoryRelatedDescriptor
         )
 
