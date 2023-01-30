@@ -17,9 +17,9 @@ class Stack {
     val lastFrame get() = fStack.lastOrNull()
     val lastLabel get() = lStack.lastOrNull()
 
-    val valueCount: U32 get() = vStack.size.toUInt()
-    val labelCount: U32 get() = lStack.size.toUInt()
-    val frameCount: U32 get() = fStack.size.toUInt()
+    val valueCount: Int get() = vStack.size
+    val labelCount: Int get() = lStack.size
+    val frameCount: Int get() = fStack.size
 
     private inline fun popType(type: StackValueType) {
         if (tStack.lastOrNull() != type) throw StackTypeException(type, lastType)

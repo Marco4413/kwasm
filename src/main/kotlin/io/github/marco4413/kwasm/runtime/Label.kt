@@ -5,20 +5,20 @@ import io.github.marco4413.kwasm.bytecode.U32
 import io.github.marco4413.kwasm.instructions.Instruction
 
 open class Label(val body: Expression) : Iterator<Instruction> {
-    var index: U32 = 0u
+    var index: Int = 0
         protected set
 
     override fun hasNext(): Boolean {
-        return index.toInt() in body.indices
+        return index in body.indices
     }
 
     override fun next(): Instruction {
-        return body[index++.toInt()]
+        return body[index++]
     }
 
     // WHY DID IT TAKE SO LONG TO ACTUALLY FIGURE THIS OUT
-    fun jumpToStart() { index = 0u }
-    fun jumpToEnd() { index = body.size.toUInt() }
+    fun jumpToStart() { index = 0 }
+    fun jumpToEnd() { index = body.size }
     // I SPENT LIKE 2 DAYS DEBUGGING A LOOP TO FIND THIS OUT
     open fun branch() = jumpToEnd()
 }
