@@ -9,7 +9,7 @@ fun trap(config: Configuration, stack: Stack, trap: Trap) {
     assert(config.thread.trap == null)
     while (stack.lastType != StackValueType.Frame) {
         when (stack.lastType) {
-            StackValueType.Value -> stack.popValue()
+            StackValueType.Value -> stack.popAndDiscardTopValues()
             StackValueType.Label -> stack.popLabel().jumpToEnd()
             else -> assert(false)
         }
