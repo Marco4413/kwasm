@@ -17,12 +17,66 @@ class I32Load8U(val memoryArg: MemoryArgument) : Instruction(I32Load8UDescriptor
     override fun execute(config: Configuration, stack: Stack) {
         val memory = config.store.getMemory(config.thread.frame.module.memories[0])
         val baseAddr = stack.popValue() as ValueI32
-        val addr = (baseAddr.value + memoryArg.offset.toInt()).toUInt()
-        if ((addr + 1u).toInt() > memory.data.size) {
+        val addr = baseAddr.value + memoryArg.offset.toInt()
+        if (addr + 1 > memory.data.size) {
             trap(config, stack, MemoryIndexOutOfBoundsTrap(config))
             return
         }
-        stack.pushValue(ValueI32(memory[addr].toInt()))
+        stack.pushValue(ValueI32(memory[addr].toInt() and 0xFF))
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeU32(memoryArg.align)
+        s.writeU32(memoryArg.offset)
+    }
+}
+
+val I32StoreDescriptor = object : InstructionDescriptor("i32.store", 0x36u) {
+    override fun read(s: WasmInputStream): Instruction = I32Store(MemoryArgument(s.readU32(), s.readU32()))
+}
+
+class I32Store(val memoryArg: MemoryArgument) : Instruction(I32StoreDescriptor) {
+    override fun execute(config: Configuration, stack: Stack) {
+        val memory = config.store.getMemory(config.thread.frame.module.memories[0])
+        val value = stack.popValue() as ValueI32
+
+        val index = stack.popValue() as ValueI32
+        val address = index.value + memoryArg.offset.toInt()
+
+        if (address + 4 > memory.data.size) {
+            trap(config, stack, MemoryIndexOutOfBoundsTrap(config))
+            return
+        }
+
+        memory.setI32(address, value.value)
+    }
+
+    override fun write(s: WasmOutputStream) {
+        super.write(s)
+        s.writeU32(memoryArg.align)
+        s.writeU32(memoryArg.offset)
+    }
+}
+
+val F64StoreDescriptor = object : InstructionDescriptor("f64.store", 0x39u) {
+    override fun read(s: WasmInputStream): Instruction = F64Store(MemoryArgument(s.readU32(), s.readU32()))
+}
+
+class F64Store(val memoryArg: MemoryArgument) : Instruction(F64StoreDescriptor) {
+    override fun execute(config: Configuration, stack: Stack) {
+        val memory = config.store.getMemory(config.thread.frame.module.memories[0])
+        val value = stack.popValue() as ValueF64
+
+        val index = stack.popValue() as ValueI32
+        val address = index.value + memoryArg.offset.toInt()
+
+        if (address + 8 > memory.data.size) {
+            trap(config, stack, MemoryIndexOutOfBoundsTrap(config))
+            return
+        }
+
+        memory.setF64(address, value.value)
     }
 
     override fun write(s: WasmOutputStream) {
