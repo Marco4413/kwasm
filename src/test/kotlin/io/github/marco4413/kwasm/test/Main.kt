@@ -5,4 +5,5 @@ fun main(args: Array<String>) {
     test.testPrintString()
     test.testWriteModule()
     test.testCompilePrintString()
+    test.testFactorialGen()
 }

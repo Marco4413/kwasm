@@ -9,7 +9,6 @@ import io.github.marco4413.kwasm.runtime.*
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.io.OutputStream
 import java.lang.NullPointerException
 import java.lang.StringBuilder
 import kotlin.test.assertContentEquals
@@ -21,6 +20,13 @@ fun openResource(name: String) : InputStream {
     val resource = Module.Companion::class.java.getResourceAsStream(name)
     assertNotNull(resource)
     return resource
+}
+
+fun time(label: String, func: () -> Unit) {
+    val startTime = System.nanoTime()
+    func()
+    val endTime = System.nanoTime()
+    println("$label took ${(endTime-startTime) / 1e6}ms")
 }
 
 class KwasmTest {
@@ -58,23 +64,19 @@ class KwasmTest {
     @Test
     fun testWriteModule() {
         println("TEST: Write Module")
-        val fileBytes = openResource("/print_string.wasm").readBytes()
-        val module = Module.read(openResource("/print_string.wasm"))
+        val fileBytes = openResource("/factorial.wasm").readBytes()
+        val module = Module.read(openResource("/factorial.wasm"))
 
-        val moduleBytes = ArrayList<Byte>()
-        val stream = object : OutputStream() {
-            override fun write(b: Int) { moduleBytes.add(b.toByte()) }
-        }
-
+        val stream = ByteArrayOutputStream()
         module.write(stream)
-        assertContentEquals(fileBytes, moduleBytes.toByteArray())
+
+        assertContentEquals(fileBytes, stream.toByteArray())
     }
 
     @Test
     fun testCompilePrintString() {
         println("TEST: Compile Print String")
-
-        val oStream = ByteArrayOutputStream()
+        val stream = ByteArrayOutputStream()
         Module(Module.WASM_MAGIC, Module.WASM_VERSION,
             listOf(),
             listOf(FunctionType(listOf(ValueType.I32), listOf())),
@@ -108,9 +110,39 @@ class KwasmTest {
                 listOf(72u, 101u, 108u, 108u, 111u, 32u, 87u, 111u, 114u, 108u, 100u, 33u, 0u),
                 DataModeActive(0u, listOf(I32Const(0)))
             ))
-        ).write(oStream)
+        ).write(stream)
 
-        val module = Module.read(oStream.toByteArray().inputStream())
+        val module = Module.read(stream.toByteArray().inputStream())
         runPrintString(module)
+    }
+
+    @Test
+    fun testFactorialGen() {
+        println("TEST: Factorial Gen")
+        val genCount = 25
+        val expectedResults = listOf(
+            4607182418800017408L, 4607182418800017408L, 4611686018427387904L, 4618441417868443648L, 4627448617123184640L,
+            4638144666238189568L, 4649544402794971136L, 4662263553305083904L, 4675774352187195392L, 4689977843394805760L,
+            4705047200009289728L, 4720626352061939712L, 4736815922046566400L, 4753323511810883584L, 4770521722250067968L,
+            4788179038478794752L, 4806193436988276736L, 4824542600135966720L, 4843268373501640704L, 4862483217080946688L,
+            4882150158176967168L, 4901649482228549152L, 4922002638466838636L, 4942108792695858382L, 4963085890558262170L
+        )
+
+        val module = Module.read(openResource("/factorial.wasm"))
+        val store = Store()
+
+        val instance = ModuleInstance(store, module, mapOf())
+        val genFactorial = instance.exports["gen_factorial"] ?: throw NullPointerException()
+
+        time("gen_factorial") {
+            instance.invoke(genFactorial, listOf(ValueI32(0), ValueI32(genCount)))
+        }
+
+        val memoryExport = instance.exports["memory"] ?: throw NullPointerException()
+        assert(memoryExport.value.type == ExternalType.MemoryAddress)
+        val memory = store.getMemory(memoryExport.value.address)
+
+        val results = List(genCount) { memory.getI64(it * 8) }
+        assertContentEquals(expectedResults, results)
     }
 }
