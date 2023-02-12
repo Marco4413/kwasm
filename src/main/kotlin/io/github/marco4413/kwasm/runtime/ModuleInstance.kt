@@ -93,7 +93,7 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
         }
 
         // INITIALIZATION (Or at least the stuff that still needs to be initialized)
-        val config = Configuration(store, ComputationThread(Frame(mutableListOf(), this), listOf()))
+        val config = Configuration(store, ComputationThread(Frame(0, mutableListOf(), this), listOf()))
         val stack = Stack()
         stack.pushFrame(config.thread.frame)
 
@@ -103,7 +103,7 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
             data.mode as DataModeActive
             assert(data.mode.memory == 0u)
 
-            val offsetLabel = Label(data.mode.offset)
+            val offsetLabel = Label(1, data.mode.offset)
             stack.pushLabel(offsetLabel)
             executeLabel(offsetLabel, config, stack)
 
@@ -131,7 +131,7 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
         for (instr in label)
             // println(instr.descriptor.name)
             instr.execute(config, stack)
-        // If this is not true then the label has probably been popped by an Instruction
+        // If this is not true then the label has probably been aborted by an Instruction
         if (stack.lastLabel == label)
             stack.popLastLabel()
     }
@@ -189,20 +189,23 @@ class ModuleInstance(val store: Store, module: Module, imports: Map<Name, Extern
                         locals.add(getDefaultForValueType(codeLocals.type))
                 }
 
-                val config = Configuration(store, ComputationThread(Frame(locals, this), func.code.body))
+                val config = Configuration(store, ComputationThread(Frame(func.type.results.size, locals, this), func.code.body))
                 stack.pushFrame(config.thread.frame)
 
-                val label = Label(config.thread.instructions)
+                val label = Label(func.type.results.size, config.thread.instructions)
                 stack.pushLabel(label)
                 executeLabel(label, config, stack)
+
                 if (stack.lastFrame == config.thread.frame)
                     stack.popLastFrame()
                 config.thread.trap
             }
             is HostFunctionInstance -> {
-                val config = Configuration(store, ComputationThread(Frame(locals, this), listOf()))
+                val config = Configuration(store, ComputationThread(Frame(func.type.results.size, locals, this), listOf()))
                 stack.pushFrame(config.thread.frame)
+
                 func.code(config, stack)
+
                 if (stack.lastFrame == config.thread.frame)
                     stack.popLastFrame()
                 config.thread.trap

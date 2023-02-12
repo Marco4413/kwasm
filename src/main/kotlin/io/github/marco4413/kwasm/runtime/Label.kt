@@ -1,11 +1,13 @@
 package io.github.marco4413.kwasm.runtime
 
 import io.github.marco4413.kwasm.bytecode.Expression
-import io.github.marco4413.kwasm.bytecode.U32
+import io.github.marco4413.kwasm.bytecode.I32
 import io.github.marco4413.kwasm.instructions.Instruction
 
-open class Label(val body: Expression) : Iterator<Instruction> {
-    var index: Int = 0
+open class Label(val arity: I32, val body: Expression) : Iterator<Instruction> {
+    constructor(body: Expression) : this(0, body)
+
+    var index: I32 = 0
         protected set
 
     override fun hasNext(): Boolean {
@@ -16,13 +18,12 @@ open class Label(val body: Expression) : Iterator<Instruction> {
         return body[index++]
     }
 
-    // WHY DID IT TAKE SO LONG TO ACTUALLY FIGURE THIS OUT
     fun jumpToStart() { index = 0 }
     fun jumpToEnd() { index = body.size }
-    // I SPENT LIKE 2 DAYS DEBUGGING A LOOP TO FIND THIS OUT
     open fun branch() = jumpToEnd()
 }
 
-class LoopLabel(body: Expression) : Label(body) {
+class LoopLabel(arity: I32, body: Expression) : Label(arity, body) {
+    constructor(body: Expression) : this(0, body)
     override fun branch() = jumpToStart()
 }

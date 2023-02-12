@@ -29,12 +29,11 @@ val BlockDescriptor = object : InstructionDescriptor("block", 0x02u) {
 class Block(val blockType: BlockType, val body: Expression) : Instruction(BlockDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
+        val label = Label(type.results.size, body)
         val values = stack.popNValues(type.parameters.size)
-        assert(values.size == type.parameters.size)
-        val label = Label(body)
+        // Enter the Block
         stack.pushLabel(label)
-        for (v in values.reversed())
-            stack.pushValue(v)
+        for (v in values.reversed()) stack.pushValue(v)
         config.thread.frame.module.executeLabel(label, config, stack)
     }
 
@@ -53,12 +52,11 @@ val LoopDescriptor = object : InstructionDescriptor("loop", 0x03u) {
 class Loop(val blockType: BlockType, val body: Expression) : Instruction(LoopDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
+        val label = LoopLabel(type.parameters.size, body)
         val values = stack.popNValues(type.parameters.size)
-        assert(values.size == type.parameters.size)
-        val label = LoopLabel(body)
+        // Enter the Loop
         stack.pushLabel(label)
-        for (v in values.reversed())
-            stack.pushValue(v)
+        for (v in values.reversed()) stack.pushValue(v)
         config.thread.frame.module.executeLabel(label, config, stack)
     }
 
@@ -80,12 +78,11 @@ class If(val blockType: BlockType, val block: ThenElseBlock) : Instruction(IfDes
         val body = (if (cond.value != 0) block.then else block.otherwise) ?: return
 
         val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
+        val label = Label(type.results.size, body)
         val values = stack.popNValues(type.parameters.size)
-        assert(values.size == type.parameters.size)
-        val label = Label(body)
+        // Enter the Block
         stack.pushLabel(label)
-        for (v in values.reversed())
-            stack.pushValue(v)
+        for (v in values.reversed()) stack.pushValue(v)
         config.thread.frame.module.executeLabel(label, config, stack)
     }
 
@@ -98,14 +95,12 @@ class If(val blockType: BlockType, val block: ThenElseBlock) : Instruction(IfDes
 
 private fun br(l: LabelIdx, config: Configuration, stack: Stack) {
     val label = stack.getNthLabelFromTop(l)
-    val values = stack.popTopValues()
-    for (i in 0u..l) {
-        while (stack.lastType == StackValueType.Value)
-            stack.popAndDiscardTopValues()
+    val values = stack.popNValues(label.arity)
+    for (i in 0u until l) {
+        stack.popAndDiscardTopValues()
         assert(stack.lastType == StackValueType.Label)
         stack.popLabel().jumpToEnd()
     }
-    stack.pushLabel(label)
     for (v in values.reversed()) stack.pushValue(v)
     label.branch()
 }
@@ -162,7 +157,7 @@ val ReturnDescriptor = object : InstructionDescriptor("return", 0x0Fu) {
 
 class Return : Instruction(ReturnDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
-        val values = stack.popTopValues()
+        val values = stack.popNValues(config.thread.frame.arity)
         while (stack.lastType != StackValueType.Frame) {
             when (stack.lastType) {
                 StackValueType.Label -> stack.popLabel().jumpToEnd()
