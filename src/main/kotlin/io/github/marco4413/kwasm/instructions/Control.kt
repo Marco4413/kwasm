@@ -1,7 +1,6 @@
 package io.github.marco4413.kwasm.instructions
 
 import io.github.marco4413.kwasm.bytecode.*
-import io.github.marco4413.kwasm.bytecode.section.writeExpression
 import io.github.marco4413.kwasm.runtime.*
 
 val UnreachableDescriptor = object : InstructionDescriptor("unreachable", 0x00u) {
@@ -23,14 +22,11 @@ class Nop : Instruction(NopDescriptor) {
 }
 
 val BlockDescriptor = object : InstructionDescriptor("block", 0x02u) {
-    override fun read(s: WasmInputStream): Instruction {
-        val blockType = readBlockType(s)
-        val body = readBlock(s, false).body1
-        return InstrBlock(blockType, body)
-    }
+    override fun read(s: WasmInputStream): Instruction =
+        Block(readBlockType(s), readExpression(s))
 }
 
-class InstrBlock(val blockType: BlockType, val body: Expression) : Instruction(BlockDescriptor) {
+class Block(val blockType: BlockType, val body: Expression) : Instruction(BlockDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
         val values = stack.popNValues(type.parameters.size)
@@ -50,11 +46,8 @@ class InstrBlock(val blockType: BlockType, val body: Expression) : Instruction(B
 }
 
 val LoopDescriptor = object : InstructionDescriptor("loop", 0x03u) {
-    override fun read(s: WasmInputStream): Instruction {
-        val blockType = readBlockType(s)
-        val body = readBlock(s, false).body1
-        return Loop(blockType, body)
-    }
+    override fun read(s: WasmInputStream): Instruction =
+        Loop(readBlockType(s), readExpression(s))
 }
 
 class Loop(val blockType: BlockType, val body: Expression) : Instruction(LoopDescriptor) {
@@ -77,17 +70,14 @@ class Loop(val blockType: BlockType, val body: Expression) : Instruction(LoopDes
 }
 
 val IfDescriptor = object : InstructionDescriptor("if", 0x04u) {
-    override fun read(s: WasmInputStream): Instruction {
-        val blockType = readBlockType(s)
-        val block = readBlock(s, true)
-        return If(blockType, block)
-    }
+    override fun read(s: WasmInputStream): Instruction =
+        If(readBlockType(s), readThenElseBlock(s))
 }
 
-class If(val blockType: BlockType, val block: Block) : Instruction(IfDescriptor) {
+class If(val blockType: BlockType, val block: ThenElseBlock) : Instruction(IfDescriptor) {
     override fun execute(config: Configuration, stack: Stack) {
         val cond = stack.popValue() as ValueI32
-        val body = if (cond.value != 0) block.body1 else block.body2
+        val body = (if (cond.value != 0) block.then else block.otherwise) ?: return
 
         val type = blockType.type ?: config.thread.frame.module.types[blockType.typeIdx.toInt()]
         val values = stack.popNValues(type.parameters.size)
@@ -102,7 +92,7 @@ class If(val blockType: BlockType, val block: Block) : Instruction(IfDescriptor)
     override fun write(s: WasmOutputStream) {
         super.write(s)
         writeBlockType(s, blockType)
-        writeBlock(s, block)
+        writeThenElseBlock(s, block)
     }
 }
 

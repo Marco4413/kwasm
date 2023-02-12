@@ -8,12 +8,6 @@ class Function(val locals: List<Locals>, val body: Expression)
 const val CodeSectionId: U8 = 10u
 typealias CodeSection = List<Function>
 
-fun readExpression(s: WasmInputStream) : Expression =
-    readBlock(s, false).body1
-
-fun writeExpression(s: WasmOutputStream, expr: Expression) =
-    writeBlock(s, Block(expr, listOf()))
-
 fun readCodeSection(s: WasmInputStream) : CodeSection {
     s.readU32() // SIZE
     return s.readVector {

@@ -17,7 +17,8 @@ class BlockType(val type: FunctionType?, val typeIdx: TypeIdx) {
 }
 
 typealias Expression = List<Instruction>
-class Block(val body1: Expression, val body2: Expression)
+// class Block(val body1: Expression, val body2: Expression)
+class ThenElseBlock(val then: Expression, val otherwise: Expression?)
 
 fun readBlockType(s: WasmInputStream) : BlockType {
     s.mark(WasmInputStream.MAX_I32_LEB128_BYTES)
@@ -45,35 +46,53 @@ fun writeBlockType(s: WasmOutputStream, blockType: BlockType) {
     }
 }
 
-/** Doesn't parse Block Types */
-fun readBlock(s: WasmInputStream, allowElse: Boolean = true) : Block {
-    var atBody1 = true
-    val body1 = ArrayList<Instruction>()
-    val body2 = ArrayList<Instruction>()
+fun readThenElseBlock(s: WasmInputStream) : ThenElseBlock {
+    val then = ArrayList<Instruction>()
+    var otherwise: ArrayList<Instruction>? = null
 
     while (true) {
         val opcode = s.readU8()
         if (opcode == BlockElse) {
-            if (!(allowElse && atBody1)) throw IllegalStateException("Invalid Block")
-            atBody1 = false
+            if (otherwise != null) throw IllegalStateException("Else already parsed")
+            otherwise = ArrayList()
             continue
         } else if (opcode == BlockEnd) break
 
         val instr = Instruction.read(s, opcode)
-        if (atBody1) body1.add(instr)
-        else body2.add(instr)
+        if (otherwise == null) then.add(instr)
+        else otherwise.add(instr)
     }
 
-    return Block(body1, body2)
+    return ThenElseBlock(then, otherwise)
 }
 
-fun writeBlock(s: WasmOutputStream, block: Block) {
-    for (instr in block.body1)
+fun writeThenElseBlock(s: WasmOutputStream, block: ThenElseBlock) {
+    for (instr in block.then)
         instr.write(s)
-    if (block.body2.isNotEmpty()) {
+    if (block.otherwise != null) {
         s.writeU8(BlockElse)
-        for (instr in block.body2)
+        for (instr in block.otherwise)
             instr.write(s)
     }
+    s.writeU8(BlockEnd)
+}
+
+fun readExpression(s: WasmInputStream) : Expression {
+    val expr = ArrayList<Instruction>()
+    while (true) {
+        val opcode = s.readU8()
+        if (opcode == BlockElse) {
+            throw IllegalStateException("Can't have else in exression")
+        } else if (opcode == BlockEnd) break
+
+        val instr = Instruction.read(s, opcode)
+        expr.add(instr)
+    }
+    return expr
+}
+
+fun writeExpression(s: WasmOutputStream, expr: Expression) {
+    for (instr in expr)
+        instr.write(s)
     s.writeU8(BlockEnd)
 }

@@ -20,7 +20,7 @@ abstract class InstructionDescriptor(val name: String, val opcode: U8) {
 
 abstract class Instruction(val descriptor: InstructionDescriptor) {
     companion object {
-        private val instr = createInstructionMap(
+        val instructions = createInstructionMap(
             // Control
             UnreachableDescriptor, NopDescriptor,
             BlockDescriptor, LoopDescriptor, IfDescriptor,
@@ -51,7 +51,7 @@ abstract class Instruction(val descriptor: InstructionDescriptor) {
         fun read(s: WasmInputStream, _opcode: U8? = null) : Instruction {
             // TODO: Move this to Module.kt?
             val opcode = _opcode ?: s.readU8()
-            val descriptor = instr[opcode]
+            val descriptor = instructions[opcode]
                 ?: throw UnknownInstructionException(opcode)
             return descriptor.read(s)
         }

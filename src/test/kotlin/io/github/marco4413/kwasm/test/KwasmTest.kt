@@ -90,7 +90,7 @@ class KwasmTest {
             null,
             listOf(Function(listOf(Locals(1u, ValueType.I32)), listOf(
                 Loop(BlockType.Void, listOf(
-                    InstrBlock(BlockType.Void, listOf(
+                    Block(BlockType.Void, listOf(
                         LocalGet(0u),
                         I32Load8U(MemoryArgument(0u, 0u)),
                         LocalTee(1u),
